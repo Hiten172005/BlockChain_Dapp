@@ -1,0 +1,209 @@
+{
+	"compiler": {
+		"version": "0.8.30+commit.73712a01"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "bankAddress",
+						"type": "address"
+					}
+				],
+				"name": "BankRegistered",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "bankAddress",
+						"type": "address"
+					}
+				],
+				"name": "BankRemoved",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_bankAddress",
+						"type": "address"
+					}
+				],
+				"name": "isBankRegistered",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_bankAddress",
+						"type": "address"
+					}
+				],
+				"name": "registerBank",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"name": "registeredBanks",
+				"outputs": [
+					{
+						"internalType": "bool",
+						"name": "",
+						"type": "bool"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_bankAddress",
+						"type": "address"
+					}
+				],
+				"name": "removeBank",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"author": "Divij (with Gemini)",
+			"events": {
+				"BankRegistered(address)": {
+					"params": {
+						"bankAddress": "The address of the newly registered bank."
+					}
+				},
+				"BankRemoved(address)": {
+					"params": {
+						"bankAddress": "The address of the removed bank."
+					}
+				}
+			},
+			"kind": "dev",
+			"methods": {
+				"isBankRegistered(address)": {
+					"params": {
+						"_bankAddress": "The address to check."
+					},
+					"returns": {
+						"_0": "A boolean value: true if the bank is registered, false otherwise."
+					}
+				},
+				"registerBank(address)": {
+					"params": {
+						"_bankAddress": "The address of the bank to register."
+					}
+				},
+				"removeBank(address)": {
+					"params": {
+						"_bankAddress": "The address of the bank to remove."
+					}
+				}
+			},
+			"title": "BankRegistry",
+			"version": 1
+		},
+		"userdoc": {
+			"events": {
+				"BankRegistered(address)": {
+					"notice": "Emitted when a new bank is successfully registered."
+				},
+				"BankRemoved(address)": {
+					"notice": "Emitted when a bank is removed from the registry."
+				}
+			},
+			"kind": "user",
+			"methods": {
+				"constructor": {
+					"notice": "The constructor function is called once when the contract is deployed. It sets the deployer of the contract as the owner."
+				},
+				"isBankRegistered(address)": {
+					"notice": "A public view function to check if an address belongs to a registered bank. This function can be called by anyone, including other smart contracts."
+				},
+				"registerBank(address)": {
+					"notice": "Registers a new bank address. Can only be called by the owner."
+				},
+				"removeBank(address)": {
+					"notice": "Removes a bank from the registry. Can only be called by the owner."
+				}
+			},
+			"notice": "This contract manages a list of authorized bank addresses. It serves as a single source of truth for other contracts in the system to verify if an action is being performed by a registered institution.",
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"Contracts/BankRegistry.sol": "BankRegistry"
+		},
+		"evmVersion": "prague",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"Contracts/BankRegistry.sol": {
+			"keccak256": "0x5e94f4cf380dd3e9790b18438a75c6873bb2fb8a184ebb58c25e3adcfe1d8bb6",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://104f5d35ec36088e9b1e41765d84b819adb42b887a447651944814bb17fdad1d",
+				"dweb:/ipfs/QmRDmxYEEP9nwALJap5iURaSgvxMHMsNL1md5GNTSzoD27"
+			]
+		}
+	},
+	"version": 1
+}
