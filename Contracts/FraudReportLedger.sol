@@ -1,21 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-/**
- * @title IBankRegistry
- * @notice This is an interface to interact with the BankRegistry contract.
- * It defines the function we need to call without needing the full source code.
- */
 interface IBankRegistry {
     function isBankRegistered(address _bankAddress) external view returns (bool);
 }
 
-/**
- * @title FraudReportLedger
- * @author Divij (with Gemini)
- * @notice This contract stores fraud reports submitted by authorized banks.
- * It relies on the BankRegistry contract to verify the identity of the reporter.
- */
 contract FraudReportLedger {
     // --- State Variables ---
 
@@ -23,7 +12,9 @@ contract FraudReportLedger {
 
     struct Report {
         uint256 reportId;
-        string reportDetails; // In a real system, this would be an IPFS hash
+        // NEW: The address of the customer involved in the fraud.
+        address customerAddress; 
+        string reportDetails;
         address reportingBank;
         uint256 timestamp;
     }
@@ -31,22 +22,18 @@ contract FraudReportLedger {
     mapping(uint256 => Report) public reports;
     uint256 public reportCounter;
 
+    // NEW: A mapping to link a customer's address to a list of their fraud report IDs.
+    mapping(address => uint256[]) public customerFraudReportIds;
+
     // --- Events ---
 
-    /**
-     * @notice Emitted when a new fraud report is successfully submitted.
-     * @param reportId The unique ID of the new report.
-     * @param bankAddress The address of the bank that submitted the report.
-     */
-    event ReportSubmitted(uint256 indexed reportId, address indexed bankAddress);
+    event ReportSubmitted(
+        uint256 indexed reportId, 
+        address indexed customerAddress, 
+        address indexed bankAddress
+    );
 
     // --- Constructor ---
-
-    /**
-     * @notice The constructor takes the address of the already deployed BankRegistry contract.
-     * This links the two contracts together.
-     * @param _bankRegistryAddress The address of the BankRegistry contract.
-     */
     constructor(address _bankRegistryAddress) {
         require(_bankRegistryAddress != address(0), "Invalid registry address");
         bankRegistryAddress = _bankRegistryAddress;
@@ -55,26 +42,51 @@ contract FraudReportLedger {
     // --- Functions ---
 
     /**
-     * @notice Allows a registered bank to submit a new fraud report.
+     * @notice Allows a registered bank to submit a new fraud report LINKED to a customer.
+     * @param _customerAddress The wallet address of the customer involved.
      * @param _reportDetails A string containing the details of the fraud.
      */
-    function submitReport(string memory _reportDetails) external {
-        // This is the CRITICAL step:
-        // It calls the isBankRegistered function on the BankRegistry contract.
+    function submitReport(address _customerAddress, string memory _reportDetails) external {
         require(
             IBankRegistry(bankRegistryAddress).isBankRegistered(msg.sender),
             "Caller is not a registered bank"
         );
+        require(_customerAddress != address(0), "Invalid customer address");
 
         reportCounter++;
         
+        // Save the full report in the main mapping
         reports[reportCounter] = Report(
             reportCounter,
+            _customerAddress,
             _reportDetails,
             msg.sender,
             block.timestamp
         );
 
-        emit ReportSubmitted(reportCounter, msg.sender);
+        // NEW: Add the new report ID to the customer's personal list of reports.
+        customerFraudReportIds[_customerAddress].push(reportCounter);
+
+        emit ReportSubmitted(reportCounter, _customerAddress, msg.sender);
+    }
+    
+    /**
+     * @notice Retrieves all fraud reports associated with a specific customer.
+     * @param _customerAddress The address of the customer to look up.
+     * @return An array of Report structs.
+     */
+    function getReportsForCustomer(address _customerAddress) external view returns (Report[] memory) {
+        // Get the list of IDs for this customer
+        uint256[] memory reportIds = customerFraudReportIds[_customerAddress];
+        
+        // Create a new array in memory to store the full report details
+        Report[] memory customerReports = new Report[](reportIds.length);
+
+        // Loop through the IDs and fetch the full report for each one
+        for (uint i = 0; i < reportIds.length; i++) {
+            customerReports[i] = reports[reportIds[i]];
+        }
+
+        return customerReports;
     }
 }

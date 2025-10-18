@@ -28,6 +28,12 @@
 					{
 						"indexed": true,
 						"internalType": "address",
+						"name": "customerAddress",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
 						"name": "bankAddress",
 						"type": "address"
 					}
@@ -43,6 +49,76 @@
 						"internalType": "address",
 						"name": "",
 						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "customerFraudReportIds",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_customerAddress",
+						"type": "address"
+					}
+				],
+				"name": "getReportsForCustomer",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "uint256",
+								"name": "reportId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "address",
+								"name": "customerAddress",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "reportDetails",
+								"type": "string"
+							},
+							{
+								"internalType": "address",
+								"name": "reportingBank",
+								"type": "address"
+							},
+							{
+								"internalType": "uint256",
+								"name": "timestamp",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct FraudReportLedger.Report[]",
+						"name": "",
+						"type": "tuple[]"
 					}
 				],
 				"stateMutability": "view",
@@ -77,6 +153,11 @@
 						"type": "uint256"
 					},
 					{
+						"internalType": "address",
+						"name": "customerAddress",
+						"type": "address"
+					},
+					{
 						"internalType": "string",
 						"name": "reportDetails",
 						"type": "string"
@@ -98,6 +179,11 @@
 			{
 				"inputs": [
 					{
+						"internalType": "address",
+						"name": "_customerAddress",
+						"type": "address"
+					},
+					{
 						"internalType": "string",
 						"name": "_reportDetails",
 						"type": "string"
@@ -110,47 +196,35 @@
 			}
 		],
 		"devdoc": {
-			"author": "Divij (with Gemini)",
-			"events": {
-				"ReportSubmitted(uint256,address)": {
-					"params": {
-						"bankAddress": "The address of the bank that submitted the report.",
-						"reportId": "The unique ID of the new report."
-					}
-				}
-			},
 			"kind": "dev",
 			"methods": {
-				"constructor": {
+				"getReportsForCustomer(address)": {
 					"params": {
-						"_bankRegistryAddress": "The address of the BankRegistry contract."
+						"_customerAddress": "The address of the customer to look up."
+					},
+					"returns": {
+						"_0": "An array of Report structs."
 					}
 				},
-				"submitReport(string)": {
+				"submitReport(address,string)": {
 					"params": {
+						"_customerAddress": "The wallet address of the customer involved.",
 						"_reportDetails": "A string containing the details of the fraud."
 					}
 				}
 			},
-			"title": "FraudReportLedger",
 			"version": 1
 		},
 		"userdoc": {
-			"events": {
-				"ReportSubmitted(uint256,address)": {
-					"notice": "Emitted when a new fraud report is successfully submitted."
-				}
-			},
 			"kind": "user",
 			"methods": {
-				"constructor": {
-					"notice": "The constructor takes the address of the already deployed BankRegistry contract. This links the two contracts together."
+				"getReportsForCustomer(address)": {
+					"notice": "Retrieves all fraud reports associated with a specific customer."
 				},
-				"submitReport(string)": {
-					"notice": "Allows a registered bank to submit a new fraud report."
+				"submitReport(address,string)": {
+					"notice": "Allows a registered bank to submit a new fraud report LINKED to a customer."
 				}
 			},
-			"notice": "This contract stores fraud reports submitted by authorized banks. It relies on the BankRegistry contract to verify the identity of the reporter.",
 			"version": 1
 		}
 	},
@@ -171,11 +245,11 @@
 	},
 	"sources": {
 		"Contracts/FraudReportLedger.sol": {
-			"keccak256": "0xac6a91ae084883b441dbd92ab80961dec681a3e6122bdd335fa4df76df632dde",
+			"keccak256": "0xa0b2ea38b9abd110d8f85efe47979e6a69432e7a5e59873479f3fc5de9b70400",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://cdc58454cb8b0384621422bff53214672a0049b0c1b052495eb2234ca0f70ead",
-				"dweb:/ipfs/QmYc67gHZMAZcfZ5C6utW844PiKpEj1chA3LbM4pFySemr"
+				"bzz-raw://f0ef5cb582252a75da73429a2e3221d3f2f5fae422abac4b72603a9c310b742f",
+				"dweb:/ipfs/QmUjAzAZdr4ca112xzerKyZggseG6tt2FUiDg2kifFTKvk"
 			]
 		}
 	},

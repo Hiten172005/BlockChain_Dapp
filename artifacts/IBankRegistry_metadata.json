@@ -28,13 +28,11 @@
 		"devdoc": {
 			"kind": "dev",
 			"methods": {},
-			"title": "IBankRegistry",
 			"version": 1
 		},
 		"userdoc": {
 			"kind": "user",
 			"methods": {},
-			"notice": "This is an interface to interact with the BankRegistry contract. It defines the function we need to call without needing the full source code.",
 			"version": 1
 		}
 	},
@@ -55,11 +53,11 @@
 	},
 	"sources": {
 		"Contracts/FraudReportLedger.sol": {
-			"keccak256": "0xac6a91ae084883b441dbd92ab80961dec681a3e6122bdd335fa4df76df632dde",
+			"keccak256": "0xa0b2ea38b9abd110d8f85efe47979e6a69432e7a5e59873479f3fc5de9b70400",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://cdc58454cb8b0384621422bff53214672a0049b0c1b052495eb2234ca0f70ead",
-				"dweb:/ipfs/QmYc67gHZMAZcfZ5C6utW844PiKpEj1chA3LbM4pFySemr"
+				"bzz-raw://f0ef5cb582252a75da73429a2e3221d3f2f5fae422abac4b72603a9c310b742f",
+				"dweb:/ipfs/QmUjAzAZdr4ca112xzerKyZggseG6tt2FUiDg2kifFTKvk"
 			]
 		}
 	},
