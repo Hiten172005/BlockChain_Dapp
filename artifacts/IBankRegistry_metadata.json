@@ -28,17 +28,19 @@
 		"devdoc": {
 			"kind": "dev",
 			"methods": {},
+			"title": "IBankRegistry",
 			"version": 1
 		},
 		"userdoc": {
 			"kind": "user",
 			"methods": {},
+			"notice": "This is an interface to interact with the BankRegistry contract. An interface defines the function signatures of another contract, allowing this contract to call them without needing the full source code.",
 			"version": 1
 		}
 	},
 	"settings": {
 		"compilationTarget": {
-			"Contracts/FraudReportLedger.sol": "IBankRegistry"
+			"Contracts/CreditDataLedger.sol": "IBankRegistry"
 		},
 		"evmVersion": "prague",
 		"libraries": {},
@@ -52,12 +54,12 @@
 		"remappings": []
 	},
 	"sources": {
-		"Contracts/FraudReportLedger.sol": {
-			"keccak256": "0xa0b2ea38b9abd110d8f85efe47979e6a69432e7a5e59873479f3fc5de9b70400",
+		"Contracts/CreditDataLedger.sol": {
+			"keccak256": "0xbb41c5b8e0b70c94533d2f066bdf58f85727a542bde481b8ce34b4a77812a386",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://f0ef5cb582252a75da73429a2e3221d3f2f5fae422abac4b72603a9c310b742f",
-				"dweb:/ipfs/QmUjAzAZdr4ca112xzerKyZggseG6tt2FUiDg2kifFTKvk"
+				"bzz-raw://0d4f868f27c0405f535e6d9485d2bcfad887771d71f6912ed5edb19575675aad",
+				"dweb:/ipfs/QmQRNWdNrBU3jZmrphYExJQwHrjyr5ZN5e8fQRszzwX7xG"
 			]
 		}
 	},
