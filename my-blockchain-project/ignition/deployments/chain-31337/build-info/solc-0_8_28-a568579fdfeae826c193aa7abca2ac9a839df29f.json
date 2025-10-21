@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-a568579fdfeae826c193aa7abca2ac9a839df29f",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/CreditDataLedger.sol": "project/contracts/CreditDataLedger.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/CreditDataLedger.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\n/**\n * @title IBankRegistry\n * @notice This is an interface to interact with the BankRegistry contract.\n * An interface defines the function signatures of another contract, allowing\n * this contract to call them without needing the full source code.\n */\ninterface IBankRegistry {\n    function isBankRegistered(address _bankAddress) external view returns (bool);\n}\n\n/**\n * @title CreditDataLedger\n * @author Divij (with Gemini)\n * @notice This contract stores credit history and data submitted by authorized banks.\n * It is linked to the BankRegistry contract to ensure that only verified\n * institutions can add or modify credit records.\n */\ncontract CreditDataLedger {\n    // --- State Variables ---\n\n    // Stores the address of the deployed BankRegistry contract to use for verification.\n    address public bankRegistryAddress;\n\n    // A custom data structure to hold the details of a single credit event.\n    struct CreditEntry {\n        uint256 entryId;\n        string entryDetails; // e.g., \"Loan Repayment Successful: ID 987\" or \"New Credit Line Approved\"\n        address reportingBank;\n        uint256 timestamp;\n    }\n\n    // A mapping that links a customer's wallet address to an array of their credit entries.\n    // This allows a single customer to have a complete, ordered history of credit events.\n    mapping(address => CreditEntry[]) public userCreditHistory;\n    \n    // A global counter to ensure every credit entry has a unique ID.\n    uint256 public entryCounter;\n\n    // --- Events ---\n\n    /**\n     * @notice Emitted when new credit data is successfully added for a user.\n     * Events create a log on the blockchain that external applications can listen to.\n     * @param userAddress The address of the customer whose credit is being updated.\n     * @param bankAddress The address of the bank that submitted the data.\n     * @param entryId The unique ID of this new credit entry.\n     */\n    event CreditDataAdded(address indexed userAddress, address indexed bankAddress, uint256 entryId);\n\n    // --- Constructor ---\n\n    /**\n     * @notice The constructor is a special function that runs only once upon deployment.\n     * It permanently links this contract to the already deployed BankRegistry contract.\n     * @param _bankRegistryAddress The address of the deployed BankRegistry contract.\n     */\n    constructor(address _bankRegistryAddress) {\n        require(_bankRegistryAddress != address(0), \"Invalid registry address\");\n        bankRegistryAddress = _bankRegistryAddress;\n    }\n\n    // --- Functions ---\n\n    /**\n     * @notice Allows a registered bank to add a new credit entry to a customer's history.\n     * @param _userAddress The address of the customer whose credit history is being updated.\n     * @param _entryDetails A string containing the details of the credit event (e.g., loan status).\n     */\n    function addCreditEntry(address _userAddress, string memory _entryDetails) external {\n        // Step 1: Security Check - Verify the caller is a registered bank by calling the\n        // isBankRegistered function on the BankRegistry contract.\n        require(\n            IBankRegistry(bankRegistryAddress).isBankRegistered(msg.sender),\n            \"Caller is not a registered bank\"\n        );\n\n        // Step 2: Input Validation - Ensure the customer address is not the zero address.\n        require(_userAddress != address(0), \"Invalid user address\");\n\n        // Step 3: Increment counter for a unique ID.\n        entryCounter++;\n        \n        // Step 4: Create the new credit entry in memory.\n        CreditEntry memory newEntry = CreditEntry(\n            entryCounter,\n            _entryDetails,\n            msg.sender, // The address of the bank calling the function\n            block.timestamp // The timestamp of the block this transaction is included in\n        );\n        \n        // Step 5: Append the new entry to the customer's credit history array.\n        userCreditHistory[_userAddress].push(newEntry);\n\n        // Step 6: Emit an event to log that this action occurred.\n        emit CreditDataAdded(_userAddress, msg.sender, entryCounter);\n    }\n\n    /**\n     * @notice A public view function to retrieve the entire credit history for a specific customer.\n     * 'view' means this function only reads data and does not cost any gas to call.\n     * @param _userAddress The address of the customer to look up.\n     * @return An array of CreditEntry structs containing the customer's full history.\n     */\n    function getUserCreditHistory(address _userAddress) external view returns (CreditEntry[] memory) {\n        return userCreditHistory[_userAddress];\n    }\n}\n"
+      }
+    }
+  }
+}

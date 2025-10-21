@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-fa7cf0d8250250c2ea991f1a6bedbd45d0a0a44b",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/BankRegistry.sol": "project/contracts/BankRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/BankRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\n/**\n * @title BankRegistry\n * @author Divij (with Gemini)\n * @notice This contract manages a list of authorized bank addresses.\n * It serves as a single source of truth for other contracts in the system\n * to verify if an action is being performed by a registered institution.\n */\ncontract BankRegistry {\n    // --- State Variables ---\n\n    address public owner;\n    mapping(address => bool) public registeredBanks;\n\n    // --- Events ---\n\n    /**\n     * @notice Emitted when a new bank is successfully registered.\n     * @param bankAddress The address of the newly registered bank.\n     */\n    event BankRegistered(address indexed bankAddress);\n\n    /**\n     * @notice Emitted when a bank is removed from the registry.\n     * @param bankAddress The address of the removed bank.\n     */\n    event BankRemoved(address indexed bankAddress);\n\n    // --- Modifiers ---\n\n    /**\n     * @notice Restricts a function to be callable only by the contract owner.\n     */\n    modifier onlyOwner() {\n        require(msg.sender == owner, \"Caller is not the owner\");\n        _;\n    }\n\n    // --- Constructor ---\n\n    /**\n     * @notice The constructor function is called once when the contract is deployed.\n     * It sets the deployer of the contract as the owner.\n     */\n    constructor() {\n        owner = msg.sender;\n    }\n\n    // --- Functions ---\n\n    /**\n     * @notice Registers a new bank address. Can only be called by the owner.\n     * @param _bankAddress The address of the bank to register.\n     */\n    function registerBank(address _bankAddress) external onlyOwner {\n        require(_bankAddress != address(0), \"Cannot register the zero address\");\n        require(!registeredBanks[_bankAddress], \"Bank is already registered\");\n        \n        registeredBanks[_bankAddress] = true;\n        emit BankRegistered(_bankAddress);\n    }\n\n    /**\n     * @notice Removes a bank from the registry. Can only be called by the owner.\n     * @param _bankAddress The address of the bank to remove.\n     */\n    function removeBank(address _bankAddress) external onlyOwner {\n        require(registeredBanks[_bankAddress], \"Bank is not registered\");\n        \n        registeredBanks[_bankAddress] = false;\n        emit BankRemoved(_bankAddress);\n    }\n\n    /**\n     * @notice A public view function to check if an address belongs to a registered bank.\n     * This function can be called by anyone, including other smart contracts.\n     * @param _bankAddress The address to check.\n     * @return A boolean value: true if the bank is registered, false otherwise.\n     */\n    function isBankRegistered(address _bankAddress) external view returns (bool) {\n        return registeredBanks[_bankAddress];\n    }\n}"
+      }
+    }
+  }
+}
