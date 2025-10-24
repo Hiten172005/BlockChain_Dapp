@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-b129a0eccef922751bd4aa9f21aa5460023a97e6",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/FraudReportLedger.sol": "project/contracts/FraudReportLedger.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/FraudReportLedger.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ninterface IBankRegistry {\n    function isBankRegistered(address _bankAddress) external view returns (bool);\n}\n\ncontract FraudReportLedger {\n    // --- State Variables ---\n\n    address public bankRegistryAddress;\n\n    struct Report {\n        uint256 reportId;\n        address customerAddress; \n        string ipfsCID; // CHANGED: This string is now an IPFS Content ID (CID)\n        address reportingBank;\n        uint256 timestamp;\n    }\n\n    mapping(uint256 => Report) public reports;\n    uint256 public reportCounter;\n    mapping(address => uint256[]) public customerFraudReportIds;\n\n    // --- Events ---\n\n    event ReportSubmitted(\n        uint256 indexed reportId, \n        address indexed customerAddress, \n        address indexed bankAddress,\n        string ipfsCID\n    );\n\n    // --- Constructor ---\n    constructor(address _bankRegistryAddress) {\n        require(_bankRegistryAddress != address(0), \"Invalid registry address\");\n        bankRegistryAddress = _bankRegistryAddress;\n    }\n\n    // --- Functions ---\n\n    /**\n     * @notice Allows a registered bank to submit a new fraud report LINKED to a customer.\n     * @param _customerAddress The wallet address of the customer involved.\n     * @param _ipfsCID The IPFS Content ID (CID) of the evidence file.\n     */\n    function submitReport(address _customerAddress, string memory _ipfsCID) external {\n        require(\n            IBankRegistry(bankRegistryAddress).isBankRegistered(msg.sender),\n            \"Caller is not a registered bank\"\n        );\n        require(_customerAddress != address(0), \"Invalid customer address\");\n\n        reportCounter++;\n        \n        reports[reportCounter] = Report(\n            reportCounter,\n            _customerAddress,\n            _ipfsCID,\n            msg.sender,\n            block.timestamp\n        );\n\n        customerFraudReportIds[_customerAddress].push(reportCounter);\n\n        emit ReportSubmitted(reportCounter, _customerAddress, msg.sender, _ipfsCID);\n    }\n    \n    /**\n     * @notice Retrieves all fraud reports associated with a specific customer.\n     */\n    function getReportsForCustomer(address _customerAddress) external view returns (Report[] memory) {\n        uint256[] memory reportIds = customerFraudReportIds[_customerAddress];\n        Report[] memory customerReports = new Report[](reportIds.length);\n\n        for (uint i = 0; i < reportIds.length; i++) {\n            customerReports[i] = reports[reportIds[i]];\n        }\n\n        return customerReports;\n    }\n}\n"
+      }
+    }
+  }
+}

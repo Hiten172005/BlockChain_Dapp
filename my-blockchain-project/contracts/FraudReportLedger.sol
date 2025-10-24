@@ -12,17 +12,14 @@ contract FraudReportLedger {
 
     struct Report {
         uint256 reportId;
-        // NEW: The address of the customer involved in the fraud.
         address customerAddress; 
-        string reportDetails;
+        string ipfsCID; // CHANGED: This string is now an IPFS Content ID (CID)
         address reportingBank;
         uint256 timestamp;
     }
 
     mapping(uint256 => Report) public reports;
     uint256 public reportCounter;
-
-    // NEW: A mapping to link a customer's address to a list of their fraud report IDs.
     mapping(address => uint256[]) public customerFraudReportIds;
 
     // --- Events ---
@@ -30,7 +27,8 @@ contract FraudReportLedger {
     event ReportSubmitted(
         uint256 indexed reportId, 
         address indexed customerAddress, 
-        address indexed bankAddress
+        address indexed bankAddress,
+        string ipfsCID
     );
 
     // --- Constructor ---
@@ -44,9 +42,9 @@ contract FraudReportLedger {
     /**
      * @notice Allows a registered bank to submit a new fraud report LINKED to a customer.
      * @param _customerAddress The wallet address of the customer involved.
-     * @param _reportDetails A string containing the details of the fraud.
+     * @param _ipfsCID The IPFS Content ID (CID) of the evidence file.
      */
-    function submitReport(address _customerAddress, string memory _reportDetails) external {
+    function submitReport(address _customerAddress, string memory _ipfsCID) external {
         require(
             IBankRegistry(bankRegistryAddress).isBankRegistered(msg.sender),
             "Caller is not a registered bank"
@@ -55,34 +53,26 @@ contract FraudReportLedger {
 
         reportCounter++;
         
-        // Save the full report in the main mapping
         reports[reportCounter] = Report(
             reportCounter,
             _customerAddress,
-            _reportDetails,
+            _ipfsCID,
             msg.sender,
             block.timestamp
         );
 
-        // NEW: Add the new report ID to the customer's personal list of reports.
         customerFraudReportIds[_customerAddress].push(reportCounter);
 
-        emit ReportSubmitted(reportCounter, _customerAddress, msg.sender);
+        emit ReportSubmitted(reportCounter, _customerAddress, msg.sender, _ipfsCID);
     }
     
     /**
      * @notice Retrieves all fraud reports associated with a specific customer.
-     * @param _customerAddress The address of the customer to look up.
-     * @return An array of Report structs.
      */
     function getReportsForCustomer(address _customerAddress) external view returns (Report[] memory) {
-        // Get the list of IDs for this customer
         uint256[] memory reportIds = customerFraudReportIds[_customerAddress];
-        
-        // Create a new array in memory to store the full report details
         Report[] memory customerReports = new Report[](reportIds.length);
 
-        // Loop through the IDs and fetch the full report for each one
         for (uint i = 0; i < reportIds.length; i++) {
             customerReports[i] = reports[reportIds[i]];
         }

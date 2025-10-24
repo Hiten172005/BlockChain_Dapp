@@ -1,634 +1,1440 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credit System Dashboard</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Credit System Dashboard (w/ Pinata IPFS)</title>
+    <!-- Ethers.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <!-- No separate IPFS client needed for Pinata API -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: white;
-            padding: 20px 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .wallet-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .wallet-address {
-            font-family: monospace;
-            background: #f0f0f0;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        button {
-            background: #667eea;
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        button:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .contracts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .contract-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .contract-card h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-            font-size: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .status-message {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 14px;
-            display: none;
-        }
-
-        .status-message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status-message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .status-message.info {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .btn-group button {
-            flex: 1;
-        }
-
-        .output-section {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-top: 30px;
-        }
-
-        .output-section h2 {
-            color: #667eea;
-            margin-bottom: 20px;
-        }
-
-        .output-content {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            font-family: monospace;
-            font-size: 14px;
-            max-height: 400px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-            word-break: break-all;
-        }
-
-        .contract-addresses {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 30px;
-        }
-
-        .contract-addresses h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .address-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 10px;
-        }
-
-        .address-label {
-            font-weight: 600;
-            color: #333;
-        }
-
-        .address-value {
-            font-family: monospace;
-            font-size: 12px;
-            color: #666;
-        }
-
-        .info-box {
-            background: #e7f3ff;
-            border-left: 4px solid #2196F3;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-
-        .info-box p {
-            margin: 5px 0;
-            font-size: 14px;
-            color: #0c5460;
-        }
+      /* Basic styling for readability */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .header,
+      .contract-addresses,
+      .contract-card,
+      .output-section {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        margin-bottom: 30px;
+      }
+      h1,
+      h2 {
+        color: #667eea;
+        margin-bottom: 15px;
+      }
+      h1 {
+        font-size: 24px;
+      }
+      h2 {
+        font-size: 20px;
+      }
+      .wallet-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+      .wallet-address {
+        font-family: monospace;
+        background: #f0f0f0;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+      }
+      button:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      .contracts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 25px;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+        font-size: 14px;
+      }
+      .form-group input,
+      .form-group input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+      .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+      .form-group input[type="file"] {
+        padding: 8px;
+        background-color: #f8f9fa;
+      }
+      .status-message {
+        margin-top: 15px;
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        display: none;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border: 1px solid transparent;
+      }
+      .status-message.success {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border-color: #badbcc;
+      }
+      .status-message.error {
+        background-color: #f8d7da;
+        color: #842029;
+        border-color: #f5c2c7;
+      }
+      .status-message.info {
+        background-color: #cff4fc;
+        color: #055160;
+        border-color: #b6effb;
+      }
+      .btn-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      .btn-group button {
+        flex: 1;
+      }
+      .output-content {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 13px;
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border: 1px solid #e0e0e0;
+        line-height: 1.6;
+      }
+      .address-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+      .address-label {
+        font-weight: 600;
+        color: #333;
+        font-size: 14px;
+      }
+      .address-value {
+        font-family: monospace;
+        font-size: 12px;
+        color: #666;
+      }
+      .info-box {
+        background: #e7f3ff;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+      }
+      .info-box p {
+        margin: 5px 0;
+        font-size: 13px;
+        color: #0c5460;
+      }
+      a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .ipfs-link {
+        word-break: break-all;
+      }
+      .output-entry {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px dashed #e0e0e0;
+      }
+      .output-entry:last-child {
+        border-bottom: none;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <div class="header">
-            <h1>🏦 Credit System Dashboard</h1>
-            <div class="wallet-info">
-                <div id="walletStatus">
-                    <button id="connectWallet">Connect MetaMask</button>
-                </div>
-            </div>
+      <!-- Header -->
+      <div class="header">
+        <h1>🏦 Credit System Dashboard (w/ Pinata IPFS)</h1>
+        <div class="wallet-info">
+          <div id="walletStatus">
+            <button id="connectWallet">Connect MetaMask</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contract Addresses Display/Update -->
+      <div class="contract-addresses">
+        <h2>📋 Deployed Contract Addresses</h2>
+        <div class="address-item">
+          <span class="address-label">BankRegistry:</span>
+          <span class="address-value" id="bankRegistryAddr">Not set</span>
+        </div>
+        <div class="address-item">
+          <span class="address-label">CreditDataLedger:</span>
+          <span class="address-value" id="creditDataAddr">Not set</span>
+        </div>
+        <div class="address-item">
+          <span class="address-label">FraudReportLedger:</span>
+          <span class="address-value" id="fraudReportAddr">Not set</span>
+        </div>
+        <button onclick="updateContractAddresses()" style="margin-top: 10px">
+          Update Addresses
+        </button>
+      </div>
+
+      <!-- Contract Interaction Cards -->
+      <div class="contracts-grid">
+        <!-- Bank Registry Card -->
+        <div class="contract-card">
+          <h2>🏛️ Bank Registry</h2>
+          <div class="info-box">
+            <p>
+              <strong>Note:</strong> Only the contract owner can register banks.
+            </p>
+            <p>
+              Your address:
+              <span
+                id="currentAddr"
+                style="font-family: monospace; font-size: 12px"
+                >Not connected</span
+              >
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="bankAddr">Bank Address to Register:</label>
+            <input type="text" id="bankAddr" placeholder="0x..." />
+          </div>
+          <div class="btn-group">
+            <button onclick="registerBank()" id="registerBtn">
+              Register Bank
+            </button>
+            <button onclick="checkBankStatus()" id="checkStatusBtn">
+              Check Status
+            </button>
+          </div>
+          <div id="bankStatus" class="status-message"></div>
         </div>
 
-        <div class="contract-addresses">
-            <h2>📋 Deployed Contract Addresses</h2>
-            <div class="address-item">
-                <span class="address-label">BankRegistry:</span>
-                <span class="address-value" id="bankRegistryAddr">Not set</span>
-            </div>
-            <div class="address-item">
-                <span class="address-label">CreditDataLedger:</span>
-                <span class="address-value" id="creditDataAddr">Not set</span>
-            </div>
-            <div class="address-item">
-                <span class="address-label">FraudReportLedger:</span>
-                <span class="address-value" id="fraudReportAddr">Not set</span>
-            </div>
-            <button onclick="updateContractAddresses()" style="margin-top: 10px;">Update Addresses</button>
+        <!-- Credit Data Ledger Card -->
+        <div class="contract-card">
+          <h2>💳 Credit Data Ledger</h2>
+          <div class="info-box">
+            <p>
+              <strong>Note:</strong> Only registered banks can add entries.
+              Submit a file containing credit details.
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="customerAddr">Customer Address:</label>
+            <input type="text" id="customerAddr" placeholder="0x..." />
+          </div>
+          <div class="form-group">
+            <label for="creditFile">Credit Evidence File:</label>
+            <input type="file" id="creditFile" />
+          </div>
+          <div class="btn-group">
+            <button onclick="addCreditEntry()" id="addCreditBtn">
+              Add Credit Entry
+            </button>
+            <button onclick="getCreditHistory()" id="getCreditBtn">
+              Get History
+            </button>
+          </div>
+          <div id="creditStatus" class="status-message"></div>
         </div>
 
-        <div class="contracts-grid">
-            <!-- Bank Registry Card -->
-            <div class="contract-card">
-                <h2>🏛️ Bank Registry</h2>
-                <div class="info-box">
-                    <p><strong>Note:</strong> Only the contract owner can register banks.</p>
-                    <p>Your address: <span id="currentAddr" style="font-family: monospace; font-size: 12px;">Not connected</span></p>
-                </div>
-                <div class="form-group">
-                    <label>Bank Address to Register:</label>
-                    <input type="text" id="bankAddr" placeholder="0x...">
-                </div>
-                <div class="btn-group">
-                    <button onclick="registerBank()">Register Bank</button>
-                    <button onclick="checkBankStatus()">Check Status</button>
-                </div>
-                <div id="bankStatus" class="status-message"></div>
-            </div>
-
-            <!-- Credit Data Ledger Card -->
-            <div class="contract-card">
-                <h2>💳 Credit Data Ledger</h2>
-                <div class="info-box">
-                    <p><strong>Note:</strong> Only registered banks can add entries.</p>
-                </div>
-                <div class="form-group">
-                    <label>Customer Address:</label>
-                    <input type="text" id="customerAddr" placeholder="0x...">
-                </div>
-                <div class="form-group">
-                    <label>Entry Details:</label>
-                    <textarea id="entryDetails" placeholder="e.g., Loan Repayment Successful: ID 987"></textarea>
-                </div>
-                <div class="btn-group">
-                    <button onclick="addCreditEntry()">Add Credit Entry</button>
-                    <button onclick="getCreditHistory()">Get History</button>
-                </div>
-                <div id="creditStatus" class="status-message"></div>
-            </div>
-
-            <!-- Fraud Report Ledger Card -->
-            <div class="contract-card">
-                <h2>⚠️ Fraud Report Ledger</h2>
-                <div class="info-box">
-                    <p><strong>Note:</strong> Only registered banks can submit reports.</p>
-                </div>
-                <div class="form-group">
-                    <label>Customer Address:</label>
-                    <input type="text" id="fraudCustomerAddr" placeholder="0x...">
-                </div>
-                <div class="form-group">
-                    <label>Report Details:</label>
-                    <textarea id="reportDetails" placeholder="Describe the fraud incident"></textarea>
-                </div>
-                <div class="btn-group">
-                    <button onclick="submitReport()">Submit Report</button>
-                    <button onclick="getReports()">Get Reports</button>
-                </div>
-                <div id="fraudStatus" class="status-message"></div>
-            </div>
+        <!-- Fraud Report Ledger Card -->
+        <div class="contract-card">
+          <h2>⚠️ Fraud Report Ledger</h2>
+          <div class="info-box">
+            <p>
+              <strong>Note:</strong> Only registered banks can submit reports.
+              Submit a file containing fraud evidence.
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="fraudCustomerAddr">Customer Address:</label>
+            <input type="text" id="fraudCustomerAddr" placeholder="0x..." />
+          </div>
+          <div class="form-group">
+            <label for="fraudFile">Fraud Evidence File:</label>
+            <input type="file" id="fraudFile" />
+          </div>
+          <div class="btn-group">
+            <button onclick="submitReport()" id="addFraudBtn">
+              Submit Report
+            </button>
+            <button onclick="getReports()" id="getFraudBtn">Get Reports</button>
+          </div>
+          <div id="fraudStatus" class="status-message"></div>
         </div>
+      </div>
 
-        <div class="output-section">
-            <h2>📊 Output & Results</h2>
-            <div class="output-content" id="output">
-                Connect your wallet to start interacting with the contracts...
-            </div>
+      <!-- Output Section -->
+      <div class="output-section">
+        <h2>📊 Output & Results</h2>
+        <div class="output-content" id="output">
+          Connect your wallet to start interacting with the contracts...
         </div>
+      </div>
     </div>
 
-    <script>
-        // Contract addresses - UPDATE THESE WITH YOUR DEPLOYED ADDRESSES
-        let CONTRACT_ADDRESSES = {
-            bankRegistry: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
-            creditDataLedger: '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512',
-            fraudReportLedger: '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0'
-        };
+    <!-- Main JavaScript Logic -->
+    <script type="module">
+      // Ensure script is treated as module
+      // --- START OF CONFIGURATION ---
 
-        // Contract ABIs matching your actual contracts
-        const BANK_REGISTRY_ABI = [
-            "function registerBank(address _bankAddress) external",
-            "function removeBank(address _bankAddress) external",
-            "function isBankRegistered(address _bankAddress) external view returns (bool)",
-            "function owner() external view returns (address)",
-            "event BankRegistered(address indexed bankAddress)",
-            "event BankRemoved(address indexed bankAddress)"
-        ];
+      // 1. PASTE YOUR PINATA API KEY (JWT) HERE
+      const PINATA_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhY2E5YTgwYS1hM2ViLTQ0NzctYjJlNi00M2I4YjY0N2QxOGEiLCJlbWFpbCI6ImdhcmdoaXRlbjEyMzRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjkxNGQ2N2U1Nzk4N2I2NzJkMTIxIiwic2NvcGVkS2V5U2VjcmV0IjoiZmI2MzQ1YzdhMzExYTdlMjNhMGFkY2E1MTIxOTUxNWEyN2RhN2FmNGUzOTc1MzRjNzIzOWE0M2Y4OWM0MWQ0NiIsImV4cCI6MTc5Mjg2Mjk0M30.3H55deD-Xq96Luy1BS4dfumZ0YYNmDy7wOMi5XvS3a0'; // <--- PASTE KEY HERE
 
-        const CREDIT_DATA_ABI = [
-            "function addCreditEntry(address _userAddress, string memory _entryDetails) external",
-            "function getUserCreditHistory(address _userAddress) external view returns (tuple(uint256 entryId, string entryDetails, address reportingBank, uint256 timestamp)[])",
-            "function bankRegistryAddress() external view returns (address)",
-            "function entryCounter() external view returns (uint256)",
-            "event CreditDataAdded(address indexed userAddress, address indexed bankAddress, uint256 entryId)"
-        ];
+      // 2. PASTE YOUR DEPLOYED CONTRACT ADDRESSES HERE (from Hardhat output)
+      let CONTRACT_ADDRESSES = {
+        bankRegistry: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // <--- PASTE ADDRESS HERE
+        creditDataLedger: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512", // <--- PASTE ADDRESS HERE
+        fraudReportLedger: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0", // <--- PASTE ADDRESS HERE
+      };
 
-        const FRAUD_REPORT_ABI = [
-            "function submitReport(address _customerAddress, string memory _reportDetails) external",
-            "function getReportsForCustomer(address _customerAddress) external view returns (tuple(uint256 reportId, address customerAddress, string reportDetails, address reportingBank, uint256 timestamp)[])",
-            "function reports(uint256) external view returns (uint256 reportId, address customerAddress, string reportDetails, address reportingBank, uint256 timestamp)",
-            "function reportCounter() external view returns (uint256)",
-            "event ReportSubmitted(uint256 indexed reportId, address indexed customerAddress, address indexed bankAddress)"
-        ];
+      // 3. PASTE YOUR CONTRACT ABIs HERE (copy from Hardhat artifacts/contracts/YourContract.sol/YourContract.json)
+      // Make sure these match the contracts that expect ipfsCID strings
+      const BANK_REGISTRY_ABI = [
+        {
+          inputs: [],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bankAddress",
+              type: "address",
+            },
+          ],
+          name: "BankRegistered",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bankAddress",
+              type: "address",
+            },
+          ],
+          name: "BankRemoved",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_bankAddress",
+              type: "address",
+            },
+          ],
+          name: "isBankRegistered",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_bankAddress",
+              type: "address",
+            },
+          ],
+          name: "registerBank",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "registeredBanks",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_bankAddress",
+              type: "address",
+            },
+          ],
+          name: "removeBank",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ];
 
-        let provider;
-        let signer;
-        let bankRegistryContract;
-        let creditDataContract;
-        let fraudReportContract;
-        let userAddress;
+      const CREDIT_DATA_ABI = [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_bankRegistryAddress",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "userAddress",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bankAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "entryId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "ipfsCID",
+              type: "string",
+            },
+          ],
+          name: "CreditDataAdded",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_userAddress",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "_ipfsCID",
+              type: "string",
+            },
+          ],
+          name: "addCreditEntry",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "bankRegistryAddress",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "entryCounter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_userAddress",
+              type: "address",
+            },
+          ],
+          name: "getUserCreditHistory",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "entryId",
+                  type: "uint256",
+                },
+                {
+                  internalType: "string",
+                  name: "ipfsCID",
+                  type: "string",
+                },
+                {
+                  internalType: "address",
+                  name: "reportingBank",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "timestamp",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct CreditDataLedger.CreditEntry[]",
+              name: "",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "userCreditHistory",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "entryId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "ipfsCID",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "reportingBank",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+      ];
 
-        // Update displayed addresses
-        function updateDisplayedAddresses() {
-            document.getElementById('bankRegistryAddr').textContent = CONTRACT_ADDRESSES.bankRegistry;
-            document.getElementById('creditDataAddr').textContent = CONTRACT_ADDRESSES.creditDataLedger;
-            document.getElementById('fraudReportAddr').textContent = CONTRACT_ADDRESSES.fraudReportLedger;
-        }
+      const FRAUD_REPORT_ABI = [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_bankRegistryAddress",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "reportId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "customerAddress",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "bankAddress",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "ipfsCID",
+              type: "string",
+            },
+          ],
+          name: "ReportSubmitted",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "bankRegistryAddress",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "customerFraudReportIds",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_customerAddress",
+              type: "address",
+            },
+          ],
+          name: "getReportsForCustomer",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "reportId",
+                  type: "uint256",
+                },
+                {
+                  internalType: "address",
+                  name: "customerAddress",
+                  type: "address",
+                },
+                {
+                  internalType: "string",
+                  name: "ipfsCID",
+                  type: "string",
+                },
+                {
+                  internalType: "address",
+                  name: "reportingBank",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "timestamp",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct FraudReportLedger.Report[]",
+              name: "",
+              type: "tuple[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "reportCounter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "reports",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "reportId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "customerAddress",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "ipfsCID",
+              type: "string",
+            },
+            {
+              internalType: "address",
+              name: "reportingBank",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_customerAddress",
+              type: "address",
+            },
+            {
+              internalType: "string",
+              name: "_ipfsCID",
+              type: "string",
+            },
+          ],
+          name: "submitReport",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ];
 
-        // Function to update contract addresses
-        function updateContractAddresses() {
-            const newBankRegistry = prompt('Enter BankRegistry address:', CONTRACT_ADDRESSES.bankRegistry);
-            const newCreditData = prompt('Enter CreditDataLedger address:', CONTRACT_ADDRESSES.creditDataLedger);
-            const newFraudReport = prompt('Enter FraudReportLedger address:', CONTRACT_ADDRESSES.fraudReportLedger);
+      // --- END OF CONFIGURATION ---
 
-            if (newBankRegistry) CONTRACT_ADDRESSES.bankRegistry = newBankRegistry;
-            if (newCreditData) CONTRACT_ADDRESSES.creditDataLedger = newCreditData;
-            if (newFraudReport) CONTRACT_ADDRESSES.fraudReportLedger = newFraudReport;
+      // Global variables for Ethers
+      let provider;
+      let signer;
+      let bankRegistryContract;
+      let creditDataContract;
+      let fraudReportContract;
+      let userAddress;
 
-            updateDisplayedAddresses();
-            
-            if (provider && signer) {
-                initializeContracts();
-            }
-            
-            showOutput('Contract addresses updated successfully!', 'success');
-        }
+      // --- UI Helper Functions ---
+      function updateDisplayedAddresses() {
+        document.getElementById("bankRegistryAddr").textContent =
+          CONTRACT_ADDRESSES.bankRegistry;
+        document.getElementById("creditDataAddr").textContent =
+          CONTRACT_ADDRESSES.creditDataLedger;
+        document.getElementById("fraudReportAddr").textContent =
+          CONTRACT_ADDRESSES.fraudReportLedger;
+      }
 
-        // Initialize displayed addresses
+      window.updateContractAddresses = function () {
+        const newBankRegistry = prompt(
+          "Enter BankRegistry address:",
+          CONTRACT_ADDRESSES.bankRegistry
+        );
+        const newCreditData = prompt(
+          "Enter CreditDataLedger address:",
+          CONTRACT_ADDRESSES.creditDataLedger
+        );
+        const newFraudReport = prompt(
+          "Enter FraudReportLedger address:",
+          CONTRACT_ADDRESSES.fraudReportLedger
+        );
+
+        if (newBankRegistry && ethers.isAddress(newBankRegistry))
+          CONTRACT_ADDRESSES.bankRegistry = newBankRegistry;
+        if (newCreditData && ethers.isAddress(newCreditData))
+          CONTRACT_ADDRESSES.creditDataLedger = newCreditData;
+        if (newFraudReport && ethers.isAddress(newFraudReport))
+          CONTRACT_ADDRESSES.fraudReportLedger = newFraudReport;
+
         updateDisplayedAddresses();
+        if (provider && signer) {
+          initializeContracts(); // Re-initialize contracts with potentially new addresses
+        }
+        showOutput("Contract addresses updated!", "success");
+      };
 
-        // Connect wallet
-        document.getElementById('connectWallet').addEventListener('click', async () => {
-            try {
-                if (typeof window.ethereum === 'undefined') {
-                    alert('Please install MetaMask!');
-                    return;
-                }
+      function showStatus(elementId, message, type, duration = 6000) {
+        const statusEl = document.getElementById(elementId);
+        if (!statusEl) return;
+        statusEl.textContent = message;
+        statusEl.className = `status-message ${type}`;
+        statusEl.style.display = "block";
+        setTimeout(() => {
+          statusEl.style.display = "none";
+        }, duration);
+      }
 
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                userAddress = accounts[0];
+      function showOutput(message, type = "info") {
+        const outputEl = document.getElementById("output");
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement("div");
+        // Basic sanitation to prevent script injection if message contains HTML-like chars
+        const sanitizedMessage = message
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+        logEntry.innerHTML = `[${timestamp}] ${sanitizedMessage.replace(
+          /\n/g,
+          "<br>"
+        )}`;
+        outputEl.prepend(logEntry);
+      }
 
-                provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner();
+      function disableButtons(disabled = true) {
+        document
+          .querySelectorAll("button:not(#connectWallet)")
+          .forEach((btn) => (btn.disabled = disabled));
+      }
 
-                initializeContracts();
-
-                document.getElementById('walletStatus').innerHTML = `
-                    <div class="wallet-address">Connected: ${userAddress.substring(0, 6)}...${userAddress.substring(38)}</div>
-                `;
-
-                document.getElementById('currentAddr').textContent = userAddress;
-
-                showOutput(`✅ Wallet connected successfully!\nAddress: ${userAddress}`, 'success');
-            } catch (error) {
-                console.error('Error connecting wallet:', error);
-                showOutput(`❌ Error connecting wallet: ${error.message}`, 'error');
+      // --- Wallet Connection ---
+      document
+        .getElementById("connectWallet")
+        .addEventListener("click", async () => {
+          const connectButton = document.getElementById("connectWallet");
+          connectButton.disabled = true;
+          connectButton.textContent = "Connecting...";
+          try {
+            if (typeof window.ethereum === "undefined") {
+              alert("Please install MetaMask!");
+              return;
             }
+            const accounts = await window.ethereum.request({
+              method: "eth_requestAccounts",
+            });
+            userAddress = accounts[0];
+            provider = new ethers.BrowserProvider(window.ethereum);
+            signer = await provider.getSigner();
+
+            // Listen for account changes
+            window.ethereum.on("accountsChanged", (newAccounts) => {
+              window.location.reload(); // Reload page on account change
+            });
+            // Listen for network changes
+            window.ethereum.on("chainChanged", (chainId) => {
+              window.location.reload(); // Reload page on network change
+            });
+
+            initializeContracts();
+            document.getElementById(
+              "walletStatus"
+            ).innerHTML = `<div class="wallet-address">Connected: ${userAddress.substring(
+              0,
+              6
+            )}...${userAddress.substring(userAddress.length - 4)}</div>`;
+            document.getElementById("currentAddr").textContent = userAddress;
+            showOutput(
+              `✅ Wallet connected!\nAddress: ${userAddress}`,
+              "success"
+            );
+            disableButtons(false); // Enable buttons after successful connection
+          } catch (error) {
+            console.error("Error connecting wallet:", error);
+            showOutput(`❌ Error connecting wallet: ${error.message}`, "error");
+            connectButton.textContent = "Connect MetaMask";
+            connectButton.disabled = false;
+          }
         });
 
-        function initializeContracts() {
-            bankRegistryContract = new ethers.Contract(CONTRACT_ADDRESSES.bankRegistry, BANK_REGISTRY_ABI, signer);
-            creditDataContract = new ethers.Contract(CONTRACT_ADDRESSES.creditDataLedger, CREDIT_DATA_ABI, signer);
-            fraudReportContract = new ethers.Contract(CONTRACT_ADDRESSES.fraudReportLedger, FRAUD_REPORT_ABI, signer);
+      function initializeContracts() {
+        // Basic check for ABI existence
+        if (
+          !BANK_REGISTRY_ABI ||
+          BANK_REGISTRY_ABI.length === 0 ||
+          !CREDIT_DATA_ABI ||
+          CREDIT_DATA_ABI.length === 0 ||
+          !FRAUD_REPORT_ABI ||
+          FRAUD_REPORT_ABI.length === 0
+        ) {
+          showOutput(
+            "❌ Contract ABIs are missing. Please paste them into the script section.",
+            "error"
+          );
+          return;
+        }
+        if (
+          !ethers.isAddress(CONTRACT_ADDRESSES.bankRegistry) ||
+          !ethers.isAddress(CONTRACT_ADDRESSES.creditDataLedger) ||
+          !ethers.isAddress(CONTRACT_ADDRESSES.fraudReportLedger)
+        ) {
+          showOutput(
+            "❌ One or more contract addresses are invalid or missing. Please update them.",
+            "error"
+          );
+          return;
         }
 
-        function showStatus(elementId, message, type) {
-            const statusEl = document.getElementById(elementId);
-            statusEl.textContent = message;
-            statusEl.className = `status-message ${type}`;
-            statusEl.style.display = 'block';
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 5000);
+        try {
+          bankRegistryContract = new ethers.Contract(
+            CONTRACT_ADDRESSES.bankRegistry,
+            BANK_REGISTRY_ABI,
+            signer
+          );
+          creditDataContract = new ethers.Contract(
+            CONTRACT_ADDRESSES.creditDataLedger,
+            CREDIT_DATA_ABI,
+            signer
+          );
+          fraudReportContract = new ethers.Contract(
+            CONTRACT_ADDRESSES.fraudReportLedger,
+            FRAUD_REPORT_ABI,
+            signer
+          );
+          console.log("Contracts initialized with Pinata setup");
+          showOutput("Contracts initialized successfully.", "success");
+        } catch (error) {
+          console.error("Error initializing contracts:", error);
+          showOutput(
+            `❌ Error initializing contracts: ${error.message}. Check ABI and addresses.`,
+            "error"
+          );
+        }
+      }
+
+      // --- Pinata IPFS Upload Function ---
+      async function uploadToIPFS(file, statusElementId) {
+        if (!file) throw new Error("No file selected.");
+        if (
+          !PINATA_JWT_TOKEN ||
+          PINATA_JWT_TOKEN === "PASTE_YOUR_PINATA_JWT_API_KEY_HERE"
+        ) {
+          throw new Error("Pinata API Key (JWT) is missing or not set.");
         }
 
-        function showOutput(message, type = 'info') {
-            const outputEl = document.getElementById('output');
-            const timestamp = new Date().toLocaleTimeString();
-            outputEl.textContent = `[${timestamp}] ${message}\n\n` + outputEl.textContent;
-        }
+        const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
+        const formData = new FormData();
+        formData.append("file", file);
 
-        // Bank Registry Functions
-        async function registerBank() {
-            const bankAddr = document.getElementById('bankAddr').value;
+        // Optional Pinata metadata and options
+        const metadata = JSON.stringify({
+          name: `CreditSystemUpload_${file.name}_${Date.now()}`,
+        });
+        formData.append("pinataMetadata", metadata);
+        const options = JSON.stringify({ cidVersion: 1 }); // Use CID v1
+        formData.append("pinataOptions", options);
 
-            if (!bankAddr) {
-                showStatus('bankStatus', 'Please enter bank address', 'error');
-                return;
-            }
+        showStatus(
+          statusElementId,
+          `⏳ Uploading "${file.name}" to IPFS via Pinata...`,
+          "info",
+          30000
+        );
 
+        try {
+          const response = await fetch(url, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${PINATA_JWT_TOKEN}`,
+              // Content-Type is set automatically by fetch for FormData
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            let errorMsg = `Pinata API Error (${response.status}): ${response.statusText}`;
             try {
-                showStatus('bankStatus', 'Registering bank...', 'info');
-                const tx = await bankRegistryContract.registerBank(bankAddr);
-                showOutput(`⏳ Transaction submitted: ${tx.hash}`, 'info');
-                
-                await tx.wait();
-                showStatus('bankStatus', 'Bank registered successfully!', 'success');
-                showOutput(`✅ Bank registered successfully!\nAddress: ${bankAddr}`, 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('bankStatus', `Error: ${error.message}`, 'error');
-                showOutput(`❌ Error registering bank: ${error.message}`, 'error');
+              // Try to get more detailed error from Pinata
+              const errorData = await response.json();
+              errorMsg = `Pinata API Error (${response.status}): ${
+                errorData.error?.reason ||
+                errorData.error ||
+                response.statusText
+              }`;
+            } catch (e) {
+              /* Ignore if response is not JSON */
             }
+            throw new Error(errorMsg);
+          }
+
+          const result = await response.json();
+          const cid = result.IpfsHash;
+
+          if (!cid)
+            throw new Error("Pinata response did not include IpfsHash.");
+
+          showStatus(
+            statusElementId,
+            `✅ File pinned! CID: ${cid.substring(0, 10)}...`,
+            "success"
+          );
+          showOutput(
+            `⬆️ File "${file.name}" pinned via Pinata.\nCID: ${cid}`,
+            "info"
+          );
+          return cid; // Return the CID
+        } catch (error) {
+          console.error("Pinata upload error:", error);
+          throw new Error(`IPFS Upload Failed: ${error.message}`);
         }
+      }
 
-        async function checkBankStatus() {
-            const bankAddr = document.getElementById('bankAddr').value || userAddress;
-
-            if (!bankAddr) {
-                showStatus('bankStatus', 'Please enter bank address', 'error');
-                return;
-            }
-
-            try {
-                showStatus('bankStatus', 'Checking bank status...', 'info');
-                const isRegistered = await bankRegistryContract.isBankRegistered(bankAddr);
-                
-                const output = `
-Bank Status for ${bankAddr}:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Registered: ${isRegistered ? 'YES ✅' : 'NO ❌'}
-                `.trim();
-                
-                showStatus('bankStatus', isRegistered ? 'Bank is registered!' : 'Bank is NOT registered', isRegistered ? 'success' : 'error');
-                showOutput(output, 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('bankStatus', `Error: ${error.message}`, 'error');
-                showOutput(`❌ Error checking bank status: ${error.message}`, 'error');
-            }
+      // --- Bank Registry Functions ---
+      window.registerBank = async function () {
+        if (!bankRegistryContract) {
+          showStatus("bankStatus", "Contract not initialized.", "error");
+          return;
         }
-
-        // Credit Data Functions
-        async function addCreditEntry() {
-            const customerAddr = document.getElementById('customerAddr').value;
-            const entryDetails = document.getElementById('entryDetails').value;
-
-            if (!customerAddr || !entryDetails) {
-                showStatus('creditStatus', 'Please fill in all fields', 'error');
-                return;
-            }
-
-            try {
-                showStatus('creditStatus', 'Adding credit entry...', 'info');
-                const tx = await creditDataContract.addCreditEntry(customerAddr, entryDetails);
-                showOutput(`⏳ Transaction submitted: ${tx.hash}`, 'info');
-                
-                await tx.wait();
-                showStatus('creditStatus', 'Credit entry added successfully!', 'success');
-                showOutput(`✅ Credit entry added!\nCustomer: ${customerAddr}\nDetails: ${entryDetails}`, 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('creditStatus', `Error: ${error.message}`, 'error');
-                showOutput(`❌ Error adding credit entry: ${error.message}`, 'error');
-            }
+        const bankAddr = document.getElementById("bankAddr").value.trim();
+        if (!ethers.isAddress(bankAddr)) {
+          showStatus("bankStatus", "Invalid Ethereum address.", "error");
+          return;
         }
-
-        async function getCreditHistory() {
-            const customerAddr = document.getElementById('customerAddr').value;
-
-            if (!customerAddr) {
-                showStatus('creditStatus', 'Please enter customer address', 'error');
-                return;
-            }
-
-            try {
-                showStatus('creditStatus', 'Fetching credit history...', 'info');
-                const history = await creditDataContract.getUserCreditHistory(customerAddr);
-                
-                if (history.length === 0) {
-                    showOutput(`No credit history found for ${customerAddr}`, 'info');
-                    showStatus('creditStatus', 'No history found', 'info');
-                    return;
-                }
-
-                let output = `Credit History for ${customerAddr}:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-                history.forEach((entry, index) => {
-                    output += `Entry #${index + 1} (ID: ${entry.entryId}):\n`;
-                    output += `Details: ${entry.entryDetails}\n`;
-                    output += `Reporting Bank: ${entry.reportingBank}\n`;
-                    output += `Time: ${new Date(Number(entry.timestamp) * 1000).toLocaleString()}\n\n`;
-                });
-                
-                showStatus('creditStatus', `Found ${history.length} entry(ies)`, 'success');
-                showOutput(output, 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('creditStatus', `Error: ${error.message}`, 'error');
-                showOutput(`❌ Error fetching credit history: ${error.message}`, 'error');
-            }
+        disableButtons();
+        try {
+          showStatus(
+            "bankStatus",
+            "Submitting registration transaction...",
+            "info"
+          );
+          const tx = await bankRegistryContract.registerBank(bankAddr);
+          showOutput(`⏳ Register Bank Tx submitted: ${tx.hash}`, "info");
+          const receipt = await tx.wait();
+          showStatus("bankStatus", "Bank registered successfully!", "success");
+          showOutput(
+            `✅ Bank registered: ${bankAddr}\nBlock: ${receipt.blockNumber}`,
+            "success"
+          );
+        } catch (error) {
+          console.error("Error registering bank:", error);
+          const reason = error.reason || error.data?.message || error.message;
+          showStatus("bankStatus", `Error: ${reason}`, "error");
+          showOutput(`❌ Error registering bank: ${reason}`, "error");
+        } finally {
+          disableButtons(false);
         }
+      };
 
-        // Fraud Report Functions
-        async function submitReport() {
-            const customerAddr = document.getElementById('fraudCustomerAddr').value;
-            const reportDetails = document.getElementById('reportDetails').value;
-
-            if (!customerAddr || !reportDetails) {
-                showStatus('fraudStatus', 'Please fill in all fields', 'error');
-                return;
-            }
-
-            try {
-                showStatus('fraudStatus', 'Submitting fraud report...', 'info');
-                const tx = await fraudReportContract.submitReport(customerAddr, reportDetails);
-                showOutput(`⏳ Transaction submitted: ${tx.hash}`, 'info');
-                
-                await tx.wait();
-                showStatus('fraudStatus', 'Fraud report submitted successfully!', 'success');
-                showOutput(`✅ Fraud report submitted!\nCustomer: ${customerAddr}\nDetails: ${reportDetails}`, 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('fraudStatus', `Error: ${error.message}`, 'error');
-                showOutput(`❌ Error submitting report: ${error.message}`, 'error');
-            }
+      window.checkBankStatus = async function () {
+        if (!bankRegistryContract) {
+          showStatus("bankStatus", "Contract not initialized.", "error");
+          return;
         }
-
-        async function getReports() {
-            const customerAddr = document.getElementById('fraudCustomerAddr').value;
-
-            if (!customerAddr) {
-                showStatus('fraudStatus', 'Please enter customer address', 'error');
-                return;
-            }
-
-            try {
-                showStatus('fraudStatus', 'Fetching fraud reports...', 'info');
-                const reports = await fraudReportContract.getReportsForCustomer(customerAddr);
-                
-                if (reports.length === 0) {
-                    showOutput(`No fraud reports found for ${customerAddr}`, 'info');
-                    showStatus('fraudStatus', 'No reports found', 'info');
-                    return;
-                }
-
-                let output = `Fraud Reports for ${customerAddr}:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-                reports.forEach((report, index) => {
-                    output += `Report #${index + 1} (ID: ${report.reportId}):\n`;
-                    output += `Customer: ${report.customerAddress}\n`;
-                    output += `Details: ${report.reportDetails}\n`;
-                    output += `Reporting Bank: ${report.reportingBank}\n`;
-                    output += `Time: ${new Date(Number(report.timestamp) * 1000).toLocaleString()}\n\n`;
-                });
-                
-                showStatus('fraudStatus', `Found ${reports.length} report(s)`, 'success');
-                showOutput(output, 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('fraudStatus', `Error: ${error.message}`, 'error');
-                showOutput(`❌ Error fetching fraud reports: ${error.message}`, 'error');
-            }
+        const bankAddrToCheck =
+          document.getElementById("bankAddr").value.trim() || userAddress;
+        if (!ethers.isAddress(bankAddrToCheck)) {
+          showStatus(
+            "bankStatus",
+            "Invalid Ethereum address to check.",
+            "error"
+          );
+          return;
         }
+        disableButtons();
+        try {
+          showStatus(
+            "bankStatus",
+            `Checking status for ${bankAddrToCheck.substring(0, 6)}...`,
+            "info"
+          );
+          const isRegistered = await bankRegistryContract.isBankRegistered(
+            bankAddrToCheck
+          );
+          const output = `Bank Status for ${bankAddrToCheck}:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nRegistered: ${
+            isRegistered ? "YES ✅" : "NO ❌"
+          }`;
+          showStatus(
+            "bankStatus",
+            isRegistered ? "Bank is registered!" : "Bank is NOT registered.",
+            isRegistered ? "success" : "info"
+          );
+          showOutput(output);
+        } catch (error) {
+          console.error("Error checking bank status:", error);
+          showStatus("bankStatus", `Error: ${error.message}`, "error");
+          showOutput(
+            `❌ Error checking bank status: ${error.message}`,
+            "error"
+          );
+        } finally {
+          disableButtons(false);
+        }
+      };
+
+      // --- Credit Data Functions ---
+      window.addCreditEntry = async function () {
+        if (!creditDataContract) {
+          showStatus("creditStatus", "Contract not initialized.", "error");
+          return;
+        }
+        const customerAddr = document
+          .getElementById("customerAddr")
+          .value.trim();
+        const fileInput = document.getElementById("creditFile");
+        const file = fileInput.files[0];
+
+        if (!ethers.isAddress(customerAddr)) {
+          showStatus("creditStatus", "Invalid customer address.", "error");
+          return;
+        }
+        if (!file) {
+          showStatus(
+            "creditStatus",
+            "Please select a file to upload.",
+            "error"
+          );
+          return;
+        }
+        disableButtons();
+
+        try {
+          const cid = await uploadToIPFS(file, "creditStatus"); // Upload first
+          showStatus(
+            "creditStatus",
+            `IPFS upload complete. Submitting CID ${cid.substring(
+              0,
+              10
+            )}... to blockchain...`,
+            "info",
+            15000
+          );
+          const tx = await creditDataContract.addCreditEntry(
+            customerAddr,
+            cid.toString()
+          ); // Then submit CID
+          showOutput(`⏳ Add Credit Entry Tx submitted: ${tx.hash}`, "info");
+
+          const receipt = await tx.wait();
+          showStatus(
+            "creditStatus",
+            "Credit entry added successfully!",
+            "success"
+          );
+          showOutput(
+            `✅ Credit entry added!\nCustomer: ${customerAddr}\nIPFS CID: ${cid}\nBlock: ${receipt.blockNumber}`,
+            "success"
+          );
+          fileInput.value = ""; // Clear file input after success
+        } catch (error) {
+          console.error("Error adding credit entry:", error);
+          const reason = error.reason || error.data?.message || error.message;
+          showStatus("creditStatus", `Error: ${reason}`, "error");
+          showOutput(`❌ Error adding credit entry: ${reason}`, "error");
+        } finally {
+          disableButtons(false);
+        }
+      };
+
+      window.getCreditHistory = async function () {
+        if (!creditDataContract) {
+          showStatus("creditStatus", "Contract not initialized.", "error");
+          return;
+        }
+        const customerAddr = document
+          .getElementById("customerAddr")
+          .value.trim();
+        if (!ethers.isAddress(customerAddr)) {
+          showStatus("creditStatus", "Invalid customer address.", "error");
+          return;
+        }
+        disableButtons();
+        try {
+          showStatus(
+            "creditStatus",
+            `Fetching credit history for ${customerAddr.substring(0, 6)}...`,
+            "info"
+          );
+          const history = await creditDataContract.getUserCreditHistory(
+            customerAddr
+          );
+
+          if (history.length === 0) {
+            showOutput(`No credit history found for ${customerAddr}.`, "info");
+            showStatus("creditStatus", "No history found.", "info");
+            return;
+          }
+
+          let outputHtml = `Credit History for ${customerAddr}:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+          history.forEach((entry, index) => {
+            const cid = entry.ipfsCID;
+            const url = `https://gateway.pinata.cloud/ipfs/${cid}`; // Use Pinata gateway
+            // Using BigInt for potentially large numbers
+            outputHtml += `<div class="output-entry">Entry #${
+              index + 1
+            } (ID: ${entry.entryId.toString()}):\n`;
+            outputHtml += `IPFS CID: <a class="ipfs-link" href="${url}" target="_blank">${cid}</a>\n`;
+            outputHtml += `Reporting Bank: ${entry.reportingBank}\n`;
+            outputHtml += `Time: ${new Date(
+              Number(entry.timestamp) * 1000
+            ).toLocaleString()}\n</div>`;
+          });
+
+          showStatus(
+            "creditStatus",
+            `Found ${history.length} entry(ies).`,
+            "success"
+          );
+          document.getElementById("output").innerHTML = outputHtml.replace(
+            /\n/g,
+            "<br>"
+          );
+        } catch (error) {
+          console.error("Error fetching credit history:", error);
+          showStatus("creditStatus", `Error: ${error.message}`, "error");
+          showOutput(
+            `❌ Error fetching credit history: ${error.message}`,
+            "error"
+          );
+        } finally {
+          disableButtons(false);
+        }
+      };
+
+      // --- Fraud Report Functions ---
+      window.submitReport = async function () {
+        if (!fraudReportContract) {
+          showStatus("fraudStatus", "Contract not initialized.", "error");
+          return;
+        }
+        const customerAddr = document
+          .getElementById("fraudCustomerAddr")
+          .value.trim();
+        const fileInput = document.getElementById("fraudFile");
+        const file = fileInput.files[0];
+
+        if (!ethers.isAddress(customerAddr)) {
+          showStatus("fraudStatus", "Invalid customer address.", "error");
+          return;
+        }
+        if (!file) {
+          showStatus("fraudStatus", "Please select a file to upload.", "error");
+          return;
+        }
+        disableButtons();
+
+        try {
+          const cid = await uploadToIPFS(file, "fraudStatus"); // Upload first
+          showStatus(
+            "fraudStatus",
+            `IPFS upload complete. Submitting CID ${cid.substring(
+              0,
+              10
+            )}... to blockchain...`,
+            "info",
+            15000
+          );
+          const tx = await fraudReportContract.submitReport(
+            customerAddr,
+            cid.toString()
+          ); // Then submit CID
+          showOutput(`⏳ Submit Fraud Report Tx submitted: ${tx.hash}`, "info");
+
+          const receipt = await tx.wait();
+          showStatus(
+            "fraudStatus",
+            "Fraud report submitted successfully!",
+            "success"
+          );
+          showOutput(
+            `✅ Fraud report submitted!\nCustomer: ${customerAddr}\nIPFS CID: ${cid}\nBlock: ${receipt.blockNumber}`,
+            "success"
+          );
+          fileInput.value = ""; // Clear file input after success
+        } catch (error) {
+          console.error("Error submitting report:", error);
+          const reason = error.reason || error.data?.message || error.message;
+          showStatus("fraudStatus", `Error: ${reason}`, "error");
+          showOutput(`❌ Error submitting report: ${reason}`, "error");
+        } finally {
+          disableButtons(false);
+        }
+      };
+
+      window.getReports = async function () {
+        if (!fraudReportContract) {
+          showStatus("fraudStatus", "Contract not initialized.", "error");
+          return;
+        }
+        const customerAddr = document
+          .getElementById("fraudCustomerAddr")
+          .value.trim();
+        if (!ethers.isAddress(customerAddr)) {
+          showStatus("fraudStatus", "Invalid customer address.", "error");
+          return;
+        }
+        disableButtons();
+        try {
+          showStatus(
+            "fraudStatus",
+            `Fetching fraud reports for ${customerAddr.substring(0, 6)}...`,
+            "info"
+          );
+          const reports = await fraudReportContract.getReportsForCustomer(
+            customerAddr
+          );
+
+          if (reports.length === 0) {
+            showOutput(`No fraud reports found for ${customerAddr}.`, "info");
+            showStatus("fraudStatus", "No reports found.", "info");
+            return;
+          }
+
+          let outputHtml = `Fraud Reports for ${customerAddr}:\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+          reports.forEach((report, index) => {
+            const cid = report.ipfsCID;
+            const url = `https://gateway.pinata.cloud/ipfs/${cid}`; // Use Pinata gateway
+            outputHtml += `<div class="output-entry">Report #${
+              index + 1
+            } (ID: ${report.reportId.toString()}):\n`;
+            outputHtml += `Customer: ${report.customerAddress}\n`;
+            outputHtml += `IPFS CID: <a class="ipfs-link" href="${url}" target="_blank">${cid}</a>\n`;
+            outputHtml += `Reporting Bank: ${report.reportingBank}\n`;
+            outputHtml += `Time: ${new Date(
+              Number(report.timestamp) * 1000
+            ).toLocaleString()}\n</div>`;
+          });
+
+          showStatus(
+            "fraudStatus",
+            `Found ${reports.length} report(s).`,
+            "success"
+          );
+          document.getElementById("output").innerHTML = outputHtml.replace(
+            /\n/g,
+            "<br>"
+          );
+        } catch (error) {
+          console.error("Error fetching fraud reports:", error);
+          showStatus("fraudStatus", `Error: ${error.message}`, "error");
+          showOutput(
+            `❌ Error fetching fraud reports: ${error.message}`,
+            "error"
+          );
+        } finally {
+          disableButtons(false);
+        }
+      };
+
+      // --- Initialization ---
+      updateDisplayedAddresses(); // Update display on initial load
     </script>
-</body>
+  </body>
 </html>
