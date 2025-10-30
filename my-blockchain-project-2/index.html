@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fraud Report System - Staking & Validation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      h1 {
+        color: #667eea;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+      }
+
+      .tagline {
+        color: #64748b;
+        font-size: 1.1em;
+      }
+
+      .wallet-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 2px solid #e2e8f0;
+      }
+
+      .wallet-info {
+        font-family: monospace;
+        background: #f1f5f9;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 0.95em;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1em;
+        font-weight: 600;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      }
+
+      button:disabled {
+        background: #cbd5e1;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      button.secondary {
+        background: #10b981;
+      }
+
+      button.danger {
+        background: #ef4444;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+        background: white;
+        padding: 10px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+      }
+
+      .tab {
+        color: black;
+        padding: 15px 25px;
+        background: white;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+        font-size: 1em;
+      }
+
+      .tab:hover {
+        background: #f1f5f9;
+      }
+
+      .tab.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-color: #667eea;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      .section {
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        margin-bottom: 30px;
+      }
+
+      h2 {
+        color: #667eea;
+        margin-bottom: 20px;
+        font-size: 1.8em;
+        border-bottom: 3px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .info-box {
+        background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+      }
+
+      .info-box strong {
+        color: #4c1d95;
+      }
+
+      .info-box p {
+        margin: 8px 0;
+        color: #5b21b6;
+      }
+
+      .warning-box {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+      }
+
+      .warning-box strong {
+        color: #92400e;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #475569;
+        font-size: 1em;
+      }
+
+      input[type="text"],
+      input[type="file"],
+      select {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 1em;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .report-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s;
+      }
+
+      .report-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+      }
+
+      .report-id {
+        font-size: 1.3em;
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .status-pending {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .status-approved {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .status-disputed {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .detail-row {
+        display: flex;
+        margin: 10px 0;
+        padding: 8px 0;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #475569;
+        width: 180px;
+        flex-shrink: 0;
+      }
+
+      .detail-value {
+        color: #64748b;
+        word-break: break-all;
+        flex: 1;
+      }
+
+      .vote-section {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 15px;
+      }
+
+      .vote-counts {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 15px;
+      }
+
+      .vote-count {
+        flex: 1;
+        text-align: center;
+        padding: 15px;
+        border-radius: 10px;
+      }
+
+      .approve-count {
+        background: #d1fae5;
+        color: #065f46;
+      }
+
+      .dispute-count {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .vote-count strong {
+        display: block;
+        font-size: 2em;
+        margin-bottom: 5px;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .button-group button {
+        flex: 1;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .stat-label {
+        font-size: 0.9em;
+        opacity: 0.9;
+        margin-bottom: 10px;
+      }
+
+      .stat-value {
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .ipfs-link {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        margin-top: 10px;
+        transition: background 0.3s;
+      }
+
+      .ipfs-link:hover {
+        background: #5568d3;
+      }
+
+      .output {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: monospace;
+        font-size: 0.9em;
+      }
+
+      .alert {
+        padding: 15px 20px;
+        border-radius: 10px;
+        margin: 15px 0;
+        border-left: 4px solid;
+      }
+
+      .alert-success {
+        background: #d1fae5;
+        border-color: #10b981;
+        color: #065f46;
+      }
+
+      .alert-error {
+        background: #fee2e2;
+        border-color: #ef4444;
+        color: #991b1b;
+      }
+
+      .alert-info {
+        background: #dbeafe;
+        border-color: #3b82f6;
+        color: #1e40af;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+      }
+
+      .spinner {
+        border: 4px solid #f3f4f6;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .score-display {
+        text-align: center;
+        padding: 40px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 20px;
+        margin: 20px 0;
+      }
+
+      .score-value {
+        font-size: 5em;
+        font-weight: bold;
+        margin: 20px 0;
+      }
+
+      .risk-level {
+        font-size: 1.5em;
+        margin: 10px 0;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #94a3b8;
+      }
+
+      .empty-state-icon {
+        font-size: 4em;
+        margin-bottom: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .report-header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Incentive Info Section -->
+      <!-- <div class="info-box" style="margin-bottom: 30px">
+        <strong>Why would banks use this chain?</strong>
+        <p>
+          Banks earn ETH rewards for honest fraud reporting and validation.<br />
+          Stakes are distributed to correct participants, incentivizing
+          accuracy.<br />
+          Transparent, decentralized fraud management builds trust and reduces
+          risk.<br />
+          Future upgrades may include token rewards, reputation scores, and
+          privileged access for high-performing banks.
+        </p>
+      </div> -->
+
+      <!-- Header -->
+      <div class="header">
+        <h1>🏦 Fraud Report System</h1>
+        <p class="tagline">
+          Decentralized Fraud Reporting with Staking & Validation
+        </p>
+        <div class="wallet-section">
+          <div class="wallet-info" id="walletInfo">Not connected</div>
+          <button onclick="connectWallet()" id="connectBtn">
+            Connect MetaMask
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('submit')">
+          📤 Submit Report
+        </button>
+        <button class="tab" onclick="switchTab('validate')">
+          🗳️ Validate Reports
+        </button>
+        <button class="tab" onclick="switchTab('finalize')">
+          ⏰ Finalize Reports
+        </button>
+        <button class="tab" onclick="switchTab('query')">
+          🔍 Query Reports
+        </button>
+        <button class="tab" onclick="switchTab('score')">📊 Fraud Score</button>
+        <button class="tab" onclick="switchTab('stats')">💰 My Stats</button>
+        <button class="tab" onclick="switchTab('bank')">
+          🏛️ Bank Registry
+        </button>
+      </div>
+
+      <!-- Tab Contents -->
+
+      <!-- Submit Report Tab -->
+      <div id="submitTab" class="tab-content active">
+        <div class="section">
+          <h2>📤 Submit Fraud Report</h2>
+
+          <div class="warning-box">
+            <strong>⚠️ Staking Required:</strong>
+            <p>
+              • You must stake <strong>32 ETH</strong> when submitting a report
+            </p>
+            <p>• Your stake will be locked for <strong>48 hours</strong></p>
+            <p>
+              • If the report is approved by validators, you get your stake back
+              plus <strong>0.003 ETH incentive</strong>
+            </p>
+            <p>• If disputed, you lose your stake to the system</p>
+          </div>
+
+          <div class="form-group">
+            <label>📄 Upload Evidence File (PDF, Image, Document)</label>
+            <input
+              type="file"
+              id="evidenceFile"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+            />
+          </div>
+
+          <div class="form-group">
+            <label>👤 Customer Ethereum Address</label>
+            <input type="text" id="customerAddress" placeholder="0x..." />
+          </div>
+
+          <button
+            onclick="submitFraudReport()"
+            id="submitBtn"
+            style="width: 100%"
+          >
+            🚀 Upload Evidence & Submit Report (Pay 32 ETH)
+          </button>
+
+          <div id="submitOutput"></div>
+        </div>
+      </div>
+
+      <!-- Validate Reports Tab -->
+      <div id="validateTab" class="tab-content">
+        <div class="section">
+          <h2>🗳️ Validate Pending Reports</h2>
+
+          <div class="info-box">
+            <strong>How Validation Works:</strong>
+            <p>• Review the evidence on IPFS</p>
+            <p>• Vote APPROVE if fraud is genuine, DISPUTE if not</p>
+            <p>• You must stake <strong>32 ETH</strong> per validation</p>
+            <p>• After 48 hours, majority wins</p>
+            <p>
+              • Majority voters get stake back +
+              <strong>0.003 ETH incentive</strong>
+            </p>
+            <p>• Minority voters lose their stake</p>
+          </div>
+
+          <button
+            onclick="loadPendingReports()"
+            class="secondary"
+            style="margin-bottom: 20px"
+          >
+            🔄 Refresh Pending Reports
+          </button>
+
+          <div id="pendingReportsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Finalize Reports Tab -->
+      <div id="finalizeTab" class="tab-content">
+        <div class="section">
+          <h2>⏰ Finalize Reports</h2>
+
+          <div class="info-box">
+            <strong>Finalization Process:</strong>
+            <p>• Reports can be finalized after 48 hours</p>
+            <p>• Anyone can trigger finalization</p>
+            <p>• Stakes are automatically distributed based on votes</p>
+            <p>• Winning voters share the losing voters' stakes</p>
+          </div>
+
+          <button
+            onclick="loadFinalizableReports()"
+            class="secondary"
+            style="margin-bottom: 20px"
+          >
+            🔄 Refresh Finalizable Reports
+          </button>
+
+          <div id="finalizableReportsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Query Reports Tab -->
+      <div id="queryTab" class="tab-content">
+        <div class="section">
+          <h2>🔍 Query Fraud Reports</h2>
+
+          <div class="info-box">
+            <strong>Query Cost:</strong>
+            <p>
+              Each query costs <strong>0.003 ETH</strong>.<br />
+              This fee is required to view reports for any customer.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label>👤 Customer Ethereum Address</label>
+            <input type="text" id="queryCustomerAddress" placeholder="0x..." />
+          </div>
+
+          <div class="button-group">
+            <button onclick="queryReports()">🔍 Get All Reports</button>
+            <button onclick="getReportCount()" class="secondary">
+              📊 Get Report Count
+            </button>
+          </div>
+
+          <div id="queryOutput"></div>
+        </div>
+      </div>
+
+      <!-- Fraud Score Tab -->
+      <div id="scoreTab" class="tab-content">
+        <div class="section">
+          <h2>📊 Check Fraud Score</h2>
+
+          <div class="info-box">
+            <strong>Fraud Score System:</strong>
+            <p>• 81-100: <strong>CLEAN</strong> (No fraud history)</p>
+            <p>• 51-80: <strong>LOW RISK</strong> (Minor issues)</p>
+            <p>• 21-50: <strong>MEDIUM RISK</strong> (Some fraud history)</p>
+            <p>• 0-20: <strong>HIGH RISK</strong> (Multiple fraud reports)</p>
+          </div>
+
+          <div class="form-group">
+            <label>👤 Customer Ethereum Address</label>
+            <input type="text" id="scoreCustomerAddress" placeholder="0x..." />
+          </div>
+
+          <button onclick="checkFraudScore()" style="width: 100%">
+            📊 Calculate Fraud Score
+          </button>
+
+          <div id="scoreOutput"></div>
+        </div>
+      </div>
+
+      <!-- Stats Tab -->
+      <div id="statsTab" class="tab-content">
+        <div class="section">
+          <h2>💰 Your Bank Statistics</h2>
+
+          <button
+            onclick="loadBankStats()"
+            class="secondary"
+            style="margin-bottom: 20px"
+          >
+            🔄 Refresh Statistics
+          </button>
+
+          <div id="statsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Bank Registry Tab -->
+      <div id="bankTab" class="tab-content">
+        <div class="section">
+          <h2>🏛️ Bank Registry Management</h2>
+
+          <div class="info-box">
+            <strong>ℹ️ Note:</strong> Only registered banks can submit reports
+            and validate. Registration is controlled by the contract owner.
+          </div>
+
+          <div class="form-group">
+            <label>🏦 Bank Ethereum Address</label>
+            <input type="text" id="bankAddress" placeholder="0x..." />
+          </div>
+
+          <div class="button-group">
+            <button onclick="checkBankStatus()">🔍 Check Status</button>
+            <button onclick="registerBank()" class="secondary">
+              ✅ Register Bank
+            </button>
+            <button onclick="removeBank()" class="danger">
+              ❌ Remove Bank
+            </button>
+          </div>
+
+          <div id="bankOutput"></div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      // Configuration
+      const PINATA_JWT =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhY2E5YTgwYS1hM2ViLTQ0NzctYjJlNi00M2I4YjY0N2QxOGEiLCJlbWFpbCI6ImdhcmdoaXRlbjEyMzRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjkxNGQ2N2U1Nzk4N2I2NzJkMTIxIiwic2NvcGVkS2V5U2VjcmV0IjoiZmI2MzQ1YzdhMzExYTdlMjNhMGFkY2E1MTIxOTUxNWEyN2RhN2FmNGUzOTc1MzRjNzIzOWE0M2Y4OWM0MWQ0NiIsImV4cCI6MTc5Mjg2Mjk0M30.3H55deD-Xq96Luy1BS4dfumZ0YYNmDy7wOMi5XvS3a0";
+
+      // Contract addresses - UPDATE AFTER DEPLOYMENT
+      const CONTRACT_ADDRESSES = {
+        bankRegistry: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        fraudReportLedger: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      };
+
+      // Contract ABIs - UPDATE AFTER COMPILATION
+      const BANK_REGISTRY_ABI = [
+        "function isBankRegistered(address) view returns (bool)",
+        "function registerBank(address)",
+        "function removeBank(address)",
+        "function owner() view returns (address)",
+      ];
+
+      const FRAUD_REPORT_LEDGER_ABI = [
+        "function submitReport(address _customerAddress, string memory _ipfsCID) payable",
+        "function validateReport(uint256 _reportId, uint8 _vote) payable",
+        "function finalizeReport(uint256 _reportId)",
+        "function getReport(uint256 _reportId) view returns (tuple(uint256 reportId, address customerAddress, string ipfsCID, address reportingBank, uint256 timestamp, uint256 reporterStake, uint256 finalizeTime, uint8 status, bool isFinalized))",
+        "function getReportsForCustomer(address) payable returns (tuple(uint256 reportId, address customerAddress, string ipfsCID, address reportingBank, uint256 timestamp, uint256 reporterStake, uint256 finalizeTime, uint8 status, bool isFinalized)[])",
+        "function getReportCount(address) view returns (uint256)",
+        "function getPendingReports() view returns (uint256[])",
+        "function getFinalizableReports() view returns (uint256[])",
+        "function getVoteCounts(uint256) view returns (uint256 approveCount, uint256 disputeCount)",
+        "function hasVoted(uint256, address) view returns (bool)",
+        "function getBankStats(address) view returns (uint256 reportsSubmitted, uint256 validationsMade, uint256 rewardsEarned, uint256 stakesLost)",
+        "function getFraudScore(address) view returns (uint256)",
+        "function REPORTER_STAKE() view returns (uint256)",
+        "function VALIDATOR_STAKE() view returns (uint256)",
+        "event ReportSubmitted(uint256 indexed reportId, address indexed customerAddress, address indexed bankAddress, string ipfsCID, uint256 stake)",
+        "event ReportValidated(uint256 indexed reportId, address indexed validator, uint8 vote, uint256 stake)",
+        "event ReportFinalized(uint256 indexed reportId, uint8 finalStatus, uint256 approveCount, uint256 disputeCount)",
+      ];
+
+      let provider,
+        signer,
+        bankRegistryContract,
+        fraudReportContract,
+        userAddress;
+
+      // Tab switching
+      window.switchTab = function (tabName) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => c.classList.remove("active"));
+
+        event.target.classList.add("active");
+        document.getElementById(tabName + "Tab").classList.add("active");
+      };
+
+      // Connect Wallet
+      window.connectWallet = async function () {
+        try {
+          if (typeof window.ethereum === "undefined") {
+            alert("Please install MetaMask!");
+            return;
+          }
+
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          userAddress = accounts[0];
+          provider = new ethers.BrowserProvider(window.ethereum);
+          signer = await provider.getSigner();
+
+          bankRegistryContract = new ethers.Contract(
+            CONTRACT_ADDRESSES.bankRegistry,
+            BANK_REGISTRY_ABI,
+            signer
+          );
+          fraudReportContract = new ethers.Contract(
+            CONTRACT_ADDRESSES.fraudReportLedger,
+            FRAUD_REPORT_LEDGER_ABI,
+            signer
+          );
+
+          document.getElementById(
+            "walletInfo"
+          ).textContent = `Connected: ${userAddress.substring(
+            0,
+            6
+          )}...${userAddress.substring(38)}`;
+          document.getElementById("connectBtn").textContent = "Connected ✓";
+          document.getElementById("connectBtn").disabled = true;
+
+          showAlert(
+            "submitOutput",
+            "✅ Wallet connected successfully!",
+            "success"
+          );
+        } catch (error) {
+          showAlert(
+            "submitOutput",
+            "❌ Connection failed: " + error.message,
+            "error"
+          );
+        }
+      };
+
+      // Upload to IPFS
+      async function uploadToIPFS(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append(
+          "pinataMetadata",
+          JSON.stringify({ name: `Fraud Evidence - ${Date.now()}` })
+        );
+
+        const response = await fetch(
+          "https://api.pinata.cloud/pinning/pinFileToIPFS",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${PINATA_JWT}` },
+            body: formData,
+          }
+        );
+
+        if (!response.ok) throw new Error("IPFS upload failed");
+        const data = await response.json();
+        return data.IpfsHash;
+      }
+
+      // Submit Fraud Report
+      window.submitFraudReport = async function () {
+        if (!fraudReportContract) {
+          showAlert("submitOutput", "Please connect wallet first!", "error");
+          return;
+        }
+
+        const file = document.getElementById("evidenceFile").files[0];
+        const customerAddress = document
+          .getElementById("customerAddress")
+          .value.trim();
+
+        if (!file || !customerAddress) {
+          showAlert(
+            "submitOutput",
+            "Please provide both file and customer address!",
+            "error"
+          );
+          return;
+        }
+
+        try {
+          showLoading(
+            "submitOutput",
+            "Step 1/3: Uploading evidence to IPFS..."
+          );
+          const ipfsCID = await uploadToIPFS(file);
+
+          showLoading(
+            "submitOutput",
+            `Step 2/3: IPFS upload complete! CID: ${ipfsCID.substring(
+              0,
+              10
+            )}...\nSubmitting to blockchain with 32 ETH stake...`
+          );
+          const tx = await fraudReportContract.submitReport(
+            customerAddress,
+            ipfsCID,
+            { value: ethers.parseEther("32") }
+          );
+
+          showLoading("submitOutput", "Step 3/3: Waiting for confirmation...");
+          const receipt = await tx.wait();
+
+          const output = `
+            <div class="alert alert-success">
+              <h3>✅ Fraud Report Submitted Successfully!</h3>
+              <div class="detail-row">
+                <span class="detail-label">Customer:</span>
+                <span class="detail-value">${customerAddress}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">IPFS CID:</span>
+                <span class="detail-value">${ipfsCID}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Stake:</span>
+                <span class="detail-value">32 ETH (locked for 48 hours)</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Transaction:</span>
+                <span class="detail-value">${tx.hash}</span>
+              </div>
+              <a href="https://gateway.pinata.cloud/ipfs/${ipfsCID}" target="_blank" class="ipfs-link">
+                🔗 View Evidence on IPFS
+              </a>
+            </div>
+          `;
+          document.getElementById("submitOutput").innerHTML = output;
+
+          // Clear form
+          document.getElementById("evidenceFile").value = "";
+          document.getElementById("customerAddress").value = "";
+        } catch (error) {
+          showAlert("submitOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      // Load Pending Reports
+      window.loadPendingReports = async function () {
+        if (!fraudReportContract) {
+          showAlert(
+            "pendingReportsContainer",
+            "Please connect wallet first!",
+            "error"
+          );
+          return;
+        }
+
+        try {
+          showLoading("pendingReportsContainer", "Loading pending reports...");
+
+          const reportIds = await fraudReportContract.getPendingReports();
+
+          if (reportIds.length === 0) {
+            document.getElementById("pendingReportsContainer").innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h3>No Pending Reports</h3>
+                <p>All reports have been finalized or there are no reports yet.</p>
+              </div>
+            `;
+            return;
+          }
+
+          let html = "";
+          for (let id of reportIds) {
+            const report = await fraudReportContract.getReport(id);
+            const [approves, disputes] =
+              await fraudReportContract.getVoteCounts(id);
+            const hasVoted = await fraudReportContract.hasVoted(
+              id,
+              userAddress
+            );
+            const timeRemaining =
+              Number(report.finalizeTime) - Math.floor(Date.now() / 1000);
+            const minutesRemaining = Math.max(
+              0,
+              Math.floor(timeRemaining / 60)
+            );
+
+            const canVote =
+              !hasVoted &&
+              timeRemaining > 0 &&
+              report.reportingBank !== userAddress;
+
+            html += `
+              <div class="report-card">
+                <div class="report-header">
+                  <span class="report-id">Report #${id}</span>
+                  <span class="status-badge status-pending">⏳ PENDING</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Customer:</span>
+                  <span class="detail-value">${report.customerAddress}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Reported By:</span>
+                  <span class="detail-value">${report.reportingBank}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Evidence:</span>
+                  <span class="detail-value">
+                    <a href="https://gateway.pinata.cloud/ipfs/${
+                      report.ipfsCID
+                    }" target="_blank" class="ipfs-link">
+                      View on IPFS
+                    </a>
+                  </span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Time Remaining:</span>
+                  <span class="detail-value">${minutesRemaining} minutes</span>
+                </div>
+                <div class="vote-section">
+                  <div class="vote-counts">
+                    <div class="vote-count approve-count">
+                      <strong>${approves}</strong>
+                      <div>APPROVE</div>
+                    </div>
+                    <div class="vote-count dispute-count">
+                      <strong>${disputes}</strong>
+                      <div>DISPUTE</div>
+                    </div>
+                  </div>
+                  ${
+                    canVote
+                      ? `
+                    <div class="button-group">
+                      <button onclick="validateReport(${id}, 0)" class="secondary">
+                        ✅ Approve (32 ETH)
+                      </button>
+                      <button onclick="validateReport(${id}, 1)" class="danger">
+                        ❌ Dispute (32 ETH)
+                      </button>
+                    </div>
+                  `
+                      : hasVoted
+                      ? `
+                    <div class="alert alert-info">✓ You have already voted on this report</div>
+                  `
+                      : report.reportingBank === userAddress
+                      ? `
+                    <div class="alert alert-info">This is your report - you cannot validate it</div>
+                  `
+                      : `
+                    <div class="alert alert-info">Voting period has ended</div>
+                  `
+                  }
+                </div>
+              </div>
+            `;
+          }
+
+          document.getElementById("pendingReportsContainer").innerHTML = html;
+        } catch (error) {
+          showAlert(
+            "pendingReportsContainer",
+            "❌ Error loading reports: " + error.message,
+            "error"
+          );
+        }
+      };
+
+      // Validate Report
+      window.validateReport = async function (reportId, voteType) {
+        try {
+          const voteText = voteType === 0 ? "APPROVE" : "DISPUTE";
+          if (
+            !confirm(
+              `Are you sure you want to vote ${voteText} on Report #${reportId}?\n\nYou will stake 32 ETH on this decision.`
+            )
+          ) {
+            return;
+          }
+
+          const tx = await fraudReportContract.validateReport(
+            reportId,
+            voteType,
+            { value: ethers.parseEther("32") }
+          );
+
+          showLoading("pendingReportsContainer", "Processing your vote...");
+          await tx.wait();
+
+          showAlert(
+            "pendingReportsContainer",
+            `✅ Vote recorded successfully! Transaction: ${tx.hash}`,
+            "success"
+          );
+
+          // Reload pending reports
+          setTimeout(() => loadPendingReports(), 2000);
+        } catch (error) {
+          showAlert(
+            "pendingReportsContainer",
+            "❌ Voting failed: " + error.message,
+            "error"
+          );
+        }
+      };
+
+      // Load Finalizable Reports
+      window.loadFinalizableReports = async function () {
+        if (!fraudReportContract) {
+          showAlert(
+            "finalizableReportsContainer",
+            "Please connect wallet first!",
+            "error"
+          );
+          return;
+        }
+
+        try {
+          showLoading(
+            "finalizableReportsContainer",
+            "Loading reports ready for finalization..."
+          );
+
+          const reportIds = await fraudReportContract.getFinalizableReports();
+
+          if (reportIds.length === 0) {
+            document.getElementById("finalizableReportsContainer").innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">⏰</div>
+                <h3>No Reports Ready</h3>
+                <p>No reports have reached the 48-hour finalization period yet.</p>
+              </div>
+            `;
+            return;
+          }
+
+          let html = "";
+          for (let id of reportIds) {
+            const report = await fraudReportContract.getReport(id);
+            const [approves, disputes] =
+              await fraudReportContract.getVoteCounts(id);
+            const projectedResult =
+              approves > disputes ? "APPROVED" : "DISPUTED";
+
+            html += `
+              <div class="report-card">
+                <div class="report-header">
+                  <span class="report-id">Report #${id}</span>
+                  <span class="status-badge status-pending">⏰ READY TO FINALIZE</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Customer:</span>
+                  <span class="detail-value">${report.customerAddress}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Evidence:</span>
+                  <span class="detail-value">
+                    <a href="https://gateway.pinata.cloud/ipfs/${report.ipfsCID}" target="_blank" class="ipfs-link">
+                      View on IPFS
+                    </a>
+                  </span>
+                </div>
+                <div class="vote-section">
+                  <div class="vote-counts">
+                    <div class="vote-count approve-count">
+                      <strong>${approves}</strong>
+                      <div>APPROVE</div>
+                    </div>
+                    <div class="vote-count dispute-count">
+                      <strong>${disputes}</strong>
+                      <div>DISPUTE</div>
+                    </div>
+                  </div>
+                  <div class="alert alert-info">
+                    Projected Result: <strong>${projectedResult}</strong>
+                  </div>
+                  <button onclick="finalizeReport(${id})" style="width: 100%;">
+                    ⚡ Finalize Report & Distribute Stakes
+                  </button>
+                </div>
+              </div>
+            `;
+          }
+
+          document.getElementById("finalizableReportsContainer").innerHTML =
+            html;
+        } catch (error) {
+          showAlert(
+            "finalizableReportsContainer",
+            "❌ Error: " + error.message,
+            "error"
+          );
+        }
+      };
+
+      // Finalize Report
+      window.finalizeReport = async function (reportId) {
+        try {
+          if (
+            !confirm(
+              `Finalize Report #${reportId}?\n\nThis will count votes and distribute stakes.`
+            )
+          ) {
+            return;
+          }
+
+          showLoading("finalizableReportsContainer", "Finalizing report...");
+          const tx = await fraudReportContract.finalizeReport(reportId);
+
+          await tx.wait();
+
+          showAlert(
+            "finalizableReportsContainer",
+            `✅ Report finalized! Stakes distributed. Transaction: ${tx.hash}`,
+            "success"
+          );
+
+          // Reload
+          setTimeout(() => loadFinalizableReports(), 2000);
+        } catch (error) {
+          showAlert(
+            "finalizableReportsContainer",
+            "❌ Finalization failed: " + error.message,
+            "error"
+          );
+        }
+      };
+
+      // Query Reports
+      window.queryReports = async function () {
+        if (!fraudReportContract) {
+          showAlert("queryOutput", "Please connect wallet first!", "error");
+          return;
+        }
+
+        const customerAddress = document
+          .getElementById("queryCustomerAddress")
+          .value.trim();
+        if (!customerAddress) {
+          showAlert("queryOutput", "Please enter a customer address!", "error");
+          return;
+        }
+
+        try {
+          showLoading("queryOutput", "Fetching reports...");
+
+          // Send the query fee (same as SCORE_QUERY_FEE in contract)
+          const fee = ethers.parseEther("0.003");
+          const reports = await fraudReportContract.getReportsForCustomer(
+            customerAddress,
+            { value: fee }
+          );
+
+          if (reports.length === 0) {
+            showAlert(
+              "queryOutput",
+              "No reports found for this customer.",
+              "info"
+            );
+            return;
+          }
+
+          const statusLabels = ["PENDING", "APPROVED", "DISPUTED"];
+          let html = `<h3 style="margin: 20px 0;">Found ${reports.length} Report(s)</h3>`;
+
+          for (let report of reports) {
+            const statusClass =
+              report.status === 1
+                ? "status-approved"
+                : report.status === 2
+                ? "status-disputed"
+                : "status-pending";
+
+            html += `
+              <div class="report-card">
+                <div class="report-header">
+                  <span class="report-id">Report #${report.reportId}</span>
+                  <span class="status-badge ${statusClass}">${
+              statusLabels[report.status]
+            }</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Reported By:</span>
+                  <span class="detail-value">${report.reportingBank}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Date:</span>
+                  <span class="detail-value">${new Date(
+                    Number(report.timestamp) * 1000
+                  ).toLocaleString()}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Stake:</span>
+                  <span class="detail-value">${ethers.formatEther(
+                    report.reporterStake
+                  )} ETH</span>
+                </div>
+                <a href="https://gateway.pinata.cloud/ipfs/${
+                  report.ipfsCID
+                }" target="_blank" class="ipfs-link">
+                  🔗 View Evidence on IPFS
+                </a>
+              </div>
+            `;
+          }
+
+          document.getElementById("queryOutput").innerHTML = html;
+        } catch (error) {
+          showAlert("queryOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      // Get Report Count
+      window.getReportCount = async function () {
+        if (!fraudReportContract) return;
+
+        const customerAddress = document
+          .getElementById("queryCustomerAddress")
+          .value.trim();
+        if (!customerAddress) {
+          showAlert("queryOutput", "Please enter a customer address!", "error");
+          return;
+        }
+
+        try {
+          const count = await fraudReportContract.getReportCount(
+            customerAddress
+          );
+
+          document.getElementById("queryOutput").innerHTML = `
+            <div class="score-display">
+              <h3>Total Fraud Reports</h3>
+              <div class="score-value">${count}</div>
+              <p>Reports found for this customer</p>
+            </div>
+          `;
+        } catch (error) {
+          showAlert("queryOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      // Check Fraud Score
+      window.checkFraudScore = async function () {
+        if (!fraudReportContract) {
+          showAlert("scoreOutput", "Please connect wallet first!", "error");
+          return;
+        }
+
+        const customerAddress = document
+          .getElementById("scoreCustomerAddress")
+          .value.trim();
+        if (!customerAddress) {
+          showAlert("scoreOutput", "Please enter a customer address!", "error");
+          return;
+        }
+
+        try {
+          showLoading("scoreOutput", "Calculating fraud score...");
+
+          const score = await fraudReportContract.getFraudScore(
+            customerAddress
+          );
+          const reportCount = await fraudReportContract.getReportCount(
+            customerAddress
+          );
+
+          let riskLevel, riskClass;
+          if (score >= 81) {
+            riskLevel = "✅ CLEAN";
+            riskClass = "status-approved";
+          } else if (score >= 51) {
+            riskLevel = "⚠️ LOW RISK";
+            riskClass = "status-pending";
+          } else if (score >= 21) {
+            riskLevel = "⚠️ MEDIUM RISK";
+            riskClass = "status-pending";
+          } else {
+            riskLevel = "❌ HIGH RISK";
+            riskClass = "status-disputed";
+          }
+
+          document.getElementById("scoreOutput").innerHTML = `
+            <div class="score-display">
+              <h3>Fraud Score</h3>
+              <div class="score-value">${score}/100</div>
+              <div class="risk-level">
+                <span class="status-badge ${riskClass}">${riskLevel}</span>
+              </div>
+              <p style="margin-top: 20px;">Based on ${reportCount} fraud report(s)</p>
+            </div>
+          `;
+        } catch (error) {
+          showAlert("scoreOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      // Load Bank Stats
+      window.loadBankStats = async function () {
+        if (!fraudReportContract) {
+          showAlert("statsContainer", "Please connect wallet first!", "error");
+          return;
+        }
+
+        try {
+          showLoading("statsContainer", "Loading your statistics...");
+
+          const [reportsSubmitted, validationsMade, rewardsEarned, stakesLost] =
+            await fraudReportContract.getBankStats(userAddress);
+
+          document.getElementById("statsContainer").innerHTML = `
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">Reports Submitted</div>
+                <div class="stat-value">${reportsSubmitted}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Validations Made</div>
+                <div class="stat-value">${validationsMade}</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Rewards Earned</div>
+                <div class="stat-value">${ethers.formatEther(
+                  rewardsEarned
+                )} ETH</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">Stakes Lost</div>
+                <div class="stat-value">${ethers.formatEther(
+                  stakesLost
+                )} ETH</div>
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          showAlert("statsContainer", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      // Bank Registry Functions
+      window.checkBankStatus = async function () {
+        if (!bankRegistryContract) return;
+
+        let address = document.getElementById("bankAddress").value.trim();
+        if (!address) address = userAddress;
+
+        try {
+          const isRegistered = await bankRegistryContract.isBankRegistered(
+            address
+          );
+
+          showAlert(
+            "bankOutput",
+            isRegistered
+              ? `✅ ${address} IS registered as a bank`
+              : `❌ ${address} is NOT registered as a bank`,
+            isRegistered ? "success" : "info"
+          );
+        } catch (error) {
+          showAlert("bankOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      window.registerBank = async function () {
+        if (!bankRegistryContract) return;
+
+        const address = document.getElementById("bankAddress").value.trim();
+        if (!address) {
+          showAlert("bankOutput", "Please enter a bank address!", "error");
+          return;
+        }
+
+        try {
+          const isRegistered = await bankRegistryContract.isBankRegistered(
+            address
+          );
+          if (isRegistered) {
+            showAlert(
+              "bankOutput",
+              "❌ This bank is already registered!",
+              "error"
+            );
+            return;
+          }
+          const tx = await bankRegistryContract.registerBank(address);
+          showLoading("bankOutput", "Registering bank...");
+          await tx.wait();
+          showAlert(
+            "bankOutput",
+            `✅ Bank registered! Transaction: ${tx.hash}`,
+            "success"
+          );
+        } catch (error) {
+          showAlert("bankOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      window.removeBank = async function () {
+        if (!bankRegistryContract) return;
+
+        const address = document.getElementById("bankAddress").value.trim();
+        if (!address) {
+          showAlert("bankOutput", "Please enter a bank address!", "error");
+          return;
+        }
+
+        try {
+          const tx = await bankRegistryContract.removeBank(address);
+          showLoading("bankOutput", "Removing bank...");
+          await tx.wait();
+          showAlert(
+            "bankOutput",
+            `✅ Bank removed! Transaction: ${tx.hash}`,
+            "success"
+          );
+        } catch (error) {
+          showAlert("bankOutput", "❌ Error: " + error.message, "error");
+        }
+      };
+
+      // Helper Functions
+      function showLoading(elementId, message) {
+        document.getElementById(elementId).innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>${message}</p>
+          </div>
+        `;
+      }
+
+      function showAlert(elementId, message, type) {
+        document.getElementById(elementId).innerHTML = `
+          <div class="alert alert-${type}">${message}</div>
+        `;
+      }
+    </script>
+  </body>
+</html>

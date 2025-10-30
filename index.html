@@ -347,7 +347,8 @@
       // --- START OF CONFIGURATION ---
 
       // 1. PASTE YOUR PINATA API KEY (JWT) HERE
-      const PINATA_JWT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhY2E5YTgwYS1hM2ViLTQ0NzctYjJlNi00M2I4YjY0N2QxOGEiLCJlbWFpbCI6ImdhcmdoaXRlbjEyMzRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjkxNGQ2N2U1Nzk4N2I2NzJkMTIxIiwic2NvcGVkS2V5U2VjcmV0IjoiZmI2MzQ1YzdhMzExYTdlMjNhMGFkY2E1MTIxOTUxNWEyN2RhN2FmNGUzOTc1MzRjNzIzOWE0M2Y4OWM0MWQ0NiIsImV4cCI6MTc5Mjg2Mjk0M30.3H55deD-Xq96Luy1BS4dfumZ0YYNmDy7wOMi5XvS3a0'; // <--- PASTE KEY HERE
+      const PINATA_JWT_TOKEN =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiJhY2E5YTgwYS1hM2ViLTQ0NzctYjJlNi00M2I4YjY0N2QxOGEiLCJlbWFpbCI6ImdhcmdoaXRlbjEyMzRAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiRlJBMSJ9LHsiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjEsImlkIjoiTllDMSJ9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6IjkxNGQ2N2U1Nzk4N2I2NzJkMTIxIiwic2NvcGVkS2V5U2VjcmV0IjoiZmI2MzQ1YzdhMzExYTdlMjNhMGFkY2E1MTIxOTUxNWEyN2RhN2FmNGUzOTc1MzRjNzIzOWE0M2Y4OWM0MWQ0NiIsImV4cCI6MTc5Mjg2Mjk0M30.3H55deD-Xq96Luy1BS4dfumZ0YYNmDy7wOMi5XvS3a0"; // <--- PASTE KEY HERE
 
       // 2. PASTE YOUR DEPLOYED CONTRACT ADDRESSES HERE (from Hardhat output)
       let CONTRACT_ADDRESSES = {
@@ -1358,6 +1359,22 @@
             "success"
           );
           fileInput.value = ""; // Clear file input after success
+
+          // --- Mine a dummy block (Hardhat local only) ---
+          if (window.ethereum && window.ethereum.request) {
+            try {
+              await window.ethereum.request({ method: "evm_mine" });
+              showOutput(
+                "⛏️ Dummy block mined to advance block.timestamp (Hardhat only).",
+                "info"
+              );
+            } catch (err) {
+              showOutput(
+                "⚠️ Could not mine dummy block: " + err.message,
+                "error"
+              );
+            }
+          }
         } catch (error) {
           console.error("Error submitting report:", error);
           const reason = error.reason || error.data?.message || error.message;

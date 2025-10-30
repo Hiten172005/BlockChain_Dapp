@@ -5,23 +5,14 @@ pragma solidity ^0.8.24;
  * @title BankRegistry
  * @author Divij (with Gemini)
  * @notice This contract manages a list of authorized bank addresses.
- *
- * @dev Why would banks use this chain?
- * - Banks can earn incentives for honest participation (e.g., submitting valid reports, validating others' reports).
- * - Reputation and reward mechanisms can be implemented to encourage good behavior.
- * - Transparent fraud reporting and validation builds trust among banks.
- * - Future: Integrate token rewards, reduced fees, or privileged access for high-reputation banks.
+ * It serves as a single source of truth for other contracts in the system
+ * to verify if an action is being performed by a registered institution.
  */
-
 contract BankRegistry {
     // --- State Variables ---
 
     address public owner;
     mapping(address => bool) public registeredBanks;
-
-    // --- Incentive Mechanism Placeholder ---
-    // mapping(address => uint256) public bankReputation;
-    // event IncentiveGranted(address indexed bankAddress, uint256 amount);
 
     // --- Events ---
 
@@ -66,7 +57,7 @@ contract BankRegistry {
     function registerBank(address _bankAddress) external onlyOwner {
         require(_bankAddress != address(0), "Cannot register the zero address");
         require(!registeredBanks[_bankAddress], "Bank is already registered");
-
+        
         registeredBanks[_bankAddress] = true;
         emit BankRegistered(_bankAddress);
     }
@@ -77,7 +68,7 @@ contract BankRegistry {
      */
     function removeBank(address _bankAddress) external onlyOwner {
         require(registeredBanks[_bankAddress], "Bank is not registered");
-
+        
         registeredBanks[_bankAddress] = false;
         emit BankRemoved(_bankAddress);
     }
@@ -88,17 +79,7 @@ contract BankRegistry {
      * @param _bankAddress The address to check.
      * @return A boolean value: true if the bank is registered, false otherwise.
      */
-    function isBankRegistered(
-        address _bankAddress
-    ) external view returns (bool) {
+    function isBankRegistered(address _bankAddress) external view returns (bool) {
         return registeredBanks[_bankAddress];
     }
-
-    // /**
-    //  * @notice Example incentive mechanism: reward a bank for honest reporting or validation.
-    //  * function grantIncentive(address _bankAddress, uint256 _amount) external onlyOwner {
-    //  *     bankReputation[_bankAddress] += _amount;
-    //  *     emit IncentiveGranted(_bankAddress, _amount);
-    //  * }
-    //  */
 }

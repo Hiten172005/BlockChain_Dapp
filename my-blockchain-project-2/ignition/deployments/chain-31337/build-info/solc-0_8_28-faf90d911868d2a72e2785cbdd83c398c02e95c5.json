@@ -1,0 +1,39 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-faf90d911868d2a72e2785cbdd83c398c02e95c5",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "userSourceNameMap": {
+    "contracts/CreditDataLedger.sol": "project/contracts/CreditDataLedger.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode",
+            "evm.deployedBytecode",
+            "evm.methodIdentifiers",
+            "metadata"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/CreditDataLedger.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.24;\n\ninterface IBankRegistry {\n    function isBankRegistered(address _bankAddress) external view returns (bool);\n}\n\ncontract CreditDataLedger {\n    // --- State Variables ---\n\n    address public bankRegistryAddress;\n\n    struct CreditEntry {\n        uint256 entryId;\n        string ipfsCID; // CHANGED: This string is now an IPFS Content ID (CID)\n        address reportingBank;\n        uint256 timestamp;\n    }\n\n    mapping(address => CreditEntry[]) public userCreditHistory;\n    uint256 public entryCounter;\n\n    // --- Events ---\n\n    event CreditDataAdded(\n        address indexed userAddress, \n        address indexed bankAddress, \n        uint256 entryId,\n        string ipfsCID\n    );\n\n    // --- Constructor ---\n    constructor(address _bankRegistryAddress) {\n        require(_bankRegistryAddress != address(0), \"Invalid registry address\");\n        bankRegistryAddress = _bankRegistryAddress;\n    }\n\n    // --- Functions ---\n\n    /**\n     * @notice Allows a registered bank to add a new credit entry for a user.\n     * @param _userAddress The address of the customer whose credit history is being updated.\n     * @param _ipfsCID The IPFS Content ID (CID) of the evidence/data file.\n     */\n    function addCreditEntry(address _userAddress, string memory _ipfsCID) external {\n        require(\n            IBankRegistry(bankRegistryAddress).isBankRegistered(msg.sender),\n            \"Caller is not a registered bank\"\n        );\n        require(_userAddress != address(0), \"Invalid user address\");\n\n        entryCounter++;\n        \n        CreditEntry memory newEntry = CreditEntry(\n            entryCounter,\n            _ipfsCID,\n            msg.sender,\n            block.timestamp\n        );\n        \n        userCreditHistory[_userAddress].push(newEntry);\n\n        emit CreditDataAdded(_userAddress, msg.sender, entryCounter, _ipfsCID);\n    }\n\n    /**\n     * @notice Retrieves the entire credit history for a specific user.\n     */\n    function getUserCreditHistory(address _userAddress) external view returns (CreditEntry[] memory) {\n        return userCreditHistory[_userAddress];\n    }\n}\n"
+      }
+    }
+  }
+}
